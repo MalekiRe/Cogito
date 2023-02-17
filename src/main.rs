@@ -1,7 +1,10 @@
 mod window_stuff;
+mod packet;
+mod server;
+mod client;
 
 use std::collections::{HashMap, HashSet};
-use std::net::SocketAddr;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -163,7 +166,6 @@ fn client(iteration: u32) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    window_stuff::run();
     let stdin = std::io::stdin();
 
     println!("Please type in `server` or `client`.");
@@ -171,14 +173,17 @@ fn main() -> Result<()> {
     let mut s = String::new();
     stdin.read_line(&mut s)?;
 
+    let server_addr = SERVER.parse()?;
+
     if s.starts_with('s') {
         println!("Starting server..");
-        server()
+        server::run_server(server_addr)
     } else {
         let s = s.replace(|x| x == '\n' || x == '\r', "");
         println!("Starting client..");
         let iteration = u32::from_str(&s).unwrap();
-        client(iteration)
+        let client_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127,0,0,1)), (12352 + iteration) as u16);
+        client::run_client(client_addr, server_addr)
     }
 }
 
