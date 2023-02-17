@@ -7,7 +7,7 @@ use crossbeam::channel::TryRecvError;
 use glam::Vec3;
 use laminar::SocketEvent;
 use stereokit::color_named::WHITE;
-use stereokit::input::StereoKitInput;
+use stereokit::input::{Handed, StereoKitInput};
 use stereokit::render::RenderLayer;
 use crate::packet::{ClientPacket, ServerPacket, VPacket};
 
@@ -39,7 +39,8 @@ pub fn run_client(client_address: SocketAddr, server_address: SocketAddr) -> Res
         }
     }
     let _thread = thread::spawn(move || socket.start_polling());
-    let player_model = stereokit::model::Model::from_file(&sk, "untitled.glb", None).unwrap();
+    let player_model = stereokit::model::Model::from_file(&sk, "Malek.vrm", None).unwrap();
+    let node = player_model.node_find("J_Bip_R_Hand").unwrap();
     sk.run(|sk| {
 
         if sk.input_head().position != prev_position.into() {
@@ -47,7 +48,7 @@ pub fn run_client(client_address: SocketAddr, server_address: SocketAddr) -> Res
             ClientPacket::UpdatePosition(prev_position).send_reliable_unordered(server_address, &mut sender);
         }
 
-
+        player_model.node_set_transform_model(node, sk.input_hand(Handed::Right).wrist.as_matrix());
 
         //socket.manual_poll(Instant::now());
 
