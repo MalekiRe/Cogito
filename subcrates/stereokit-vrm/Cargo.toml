@@ -1,0 +1,13 @@
+[package]
+name = "stereokit-vrm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+stereokit = "0.14.2"
+goth-gltf = { git = "https://github.com/MalekiRe/goth-gltf"}
+color-eyre = "0.6.2"
+glam = {version = "0.22.0", features = ["mint"]}
+simple-error = "0.2.3"

@@ -1125,6 +1125,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "stereokit-locomotion"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "glam",
+ "stereokit 0.14.2",
+]
+
+[[package]]
 name = "stereokit-sys"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
