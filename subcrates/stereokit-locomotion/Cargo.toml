@@ -2,8 +2,14 @@
 name = "stereokit-locomotion"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["MalekiRe"]
+description = "adds simple VRChat style controller locomotion to stereokit"
+license = "MIT"
+keywords = ["stereokit", "XR", "VR", "AR"]
+categories = ["game-development"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
 
 [dependencies]
 stereokit = "0.15.0"
