@@ -1,5 +1,5 @@
-use color_eyre::Result;
-use glam::{EulerRot, Mat4, Quat, Vec3};
+use std::ops::AddAssign;
+use glam::{EulerRot, Mat4, Quat, Vec2, Vec3};
 use glam::EulerRot::XYZ;
 use stereokit::input::Handed;
 use stereokit::lifecycle::StereoKitContext;
@@ -54,7 +54,7 @@ impl LocomotionTracker {
         let right_controller = sk.input_controller(Handed::Right);
         let rot_x = right_controller.stick.x;
         let (scale, rot, mut position) = Mat4::from(Camera::get_root(sk)).to_scale_rotation_translation();
-        let (mut x, mut y, mut z) = angles_from_quat(rot);
+        let (x, mut y, z) = angles_from_quat(rot);
         if rot_x >= self.rotation_sensitivity {
             y += 1.0 * self.toggle * self.rotation_speed_multiplier;
         }
@@ -68,13 +68,16 @@ impl LocomotionTracker {
         let left_controller = sk.input_controller(Handed::Left);
         let stick_x = left_controller.stick.x;
         let stick_y = left_controller.stick.y;
-
+        let mut r#move = Vec2::default();
         if stick_x > 0.1 || stick_x < -0.1 {
-            position.x -= self.position_speed_multiplier * stick_x/200.0;
+            r#move.x -= self.position_speed_multiplier * stick_x/200.0;
         }
         if stick_y > 0.1 || stick_y < -0.1 {
-            position.z -= self.position_speed_multiplier * stick_y/200.0;
+            r#move.y -= self.position_speed_multiplier * stick_y/200.0;
         }
+
+        let m = Mat4::from_rotation_translation(quat_from_angles(x, y, z), Vec3::default());
+        position.add_assign(m.transform_point3(Vec3::new(r#move.x, 0.0, r#move.y)));
         let matrix = Mat4::from_scale_rotation_translation(
             scale, quat_from_angles(x, y, z), position
         );
