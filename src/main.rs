@@ -1,18 +1,20 @@
+extern crate core;
+
 mod window_stuff;
 mod packet;
 mod server;
 mod client;
+mod avatar;
 
 use std::collections::{HashMap, HashSet};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
 use std::thread;
 use std::time::{Duration, Instant};
+use color_eyre::owo_colors::AnsiColors::Default;
 use laminar::{Packet, Socket, SocketEvent};
 use color_eyre::Result;
 use glam::{Mat4, Quat, Vec3};
-use nix::sys::ptrace::kill;
-use nix::unistd::{fork, ForkResult};
 use serde::{Deserialize, Serialize};
 use stereokit::input::StereoKitInput;
 use stereokit::Settings;
@@ -166,6 +168,9 @@ fn client(iteration: u32) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+
+    client::run_client(SERVER.parse()?,SERVER.parse()?)?;
+    return Ok(());
     let stdin = std::io::stdin();
 
     println!("Please type in `server` or `client`.");

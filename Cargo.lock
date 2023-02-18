@@ -486,6 +486,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
+name = "goth-gltf"
+version = "0.1.0"
+dependencies = [
+ "nanoserde",
+]
+
+[[package]]
+name = "goth-gltf"
+version = "0.1.0"
+source = "git+https://github.com/MalekiRe/goth-gltf#9ef1265ebaf7b7bc2b93fa3013aaf27f2cc2e244"
+dependencies = [
+ "nanoserde",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -659,6 +674,19 @@ checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 dependencies = [
  "serde",
 ]
+
+[[package]]
+name = "nanoserde"
+version = "0.1.32"
+source = "git+https://github.com/not-fl3/nanoserde#efbce04bf00a2f303651660847efde49407a7e6d"
+dependencies = [
+ "nanoserde-derive",
+]
+
+[[package]]
+name = "nanoserde-derive"
+version = "0.1.19"
+source = "git+https://github.com/not-fl3/nanoserde#efbce04bf00a2f303651660847efde49407a7e6d"
 
 [[package]]
 name = "ndk-context"
@@ -1035,6 +1063,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "simple-error"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc47a29ce97772ca5c927f75bac34866b16d64e07f330c3248e2d7226623901b"
+
+[[package]]
 name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1048,7 +1082,30 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stereokit"
-version = "0.14.0"
+version = "0.14.2"
+dependencies = [
+ "bitflags",
+ "bitflags_serde_shim",
+ "color-eyre",
+ "derive_builder",
+ "derive_is_enum_variant",
+ "mint",
+ "ndk-context",
+ "num-derive",
+ "num_enum",
+ "once_cell",
+ "serde",
+ "serde_repr",
+ "stereokit-sys",
+ "tracing",
+ "ustr",
+]
+
+[[package]]
+name = "stereokit"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8198cd0a919012969881167b2d531a50d7a25b4907eeb9de9dfdbf1a9971aa37"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",
@@ -1076,6 +1133,17 @@ dependencies = [
  "bindgen",
  "cmake",
  "mint",
+]
+
+[[package]]
+name = "stereokit-vrm"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "glam",
+ "goth-gltf 0.1.0 (git+https://github.com/MalekiRe/goth-gltf)",
+ "simple-error",
+ "stereokit 0.14.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1248,13 +1316,14 @@ dependencies = [
  "color-eyre",
  "crossbeam",
  "glam",
+ "goth-gltf 0.1.0",
  "laminar",
  "mint",
  "nix 0.26.2",
  "rand",
  "serde",
  "serde_json",
- "stereokit",
+ "stereokit 0.14.2",
  "x11rb 0.11.1",
 ]
 

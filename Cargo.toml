@@ -5,9 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace]
+members = [
+"subcrates/stereokit-vrm"
+]
+
 [dependencies]
 glam = {version = "0.22.0", features = ["mint", "serde", "bytemuck"]}
-stereokit = { path = "../stereokit-rs" }
+stereokit = { path = "../stereokit-rs"}
 serde = "1.0.152"
 color-eyre = "0.6.2"
 mint = {version = "0.5.9", features = ["serde"]}
@@ -22,3 +27,7 @@ rand = "0.8.5"
 #xcb-util = {  version = "0.4.0" , features = ["image", "cursor", "ewmh", "misc", "shm"]}
 x11rb = {version = "0.11.1", features = ["all-extensions"]}
 captis = "0.6.1"
+#gltf = {version = "1.1.0", features = ["extras", "default"]}
+#mugltf = "0.1.2"
+#gltf-json = "1.1.0"
+goth-gltf = { path = "../goth-gltf"}
