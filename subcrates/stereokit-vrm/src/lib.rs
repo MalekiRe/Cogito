@@ -11,7 +11,9 @@ use stereokit::color_named::WHITE;
 use stereokit::model::{Model, NodeId};
 use stereokit::pose::Pose;
 use stereokit::render::RenderLayer;
+use stereokit::values::MMatrix;
 use crate::bones::Skeleton;
+use crate::ik::Ik;
 
 pub type VrmGltf = Gltf<goth_gltf::default_extensions::Extensions>;
 
@@ -19,7 +21,15 @@ pub type VrmGltf = Gltf<goth_gltf::default_extensions::Extensions>;
 pub struct VrmAvatar {
     model: Model,
     skeleton: Skeleton,
+    ik: Ik,
     gltf: VrmGltf,
+    number: u32,
+    n2: u32,
+    r1: f32,
+    r2: f32,
+    x: f32,
+    y: f32,
+    z: f32,
 }
 
 impl VrmAvatar {
@@ -34,12 +44,24 @@ impl VrmAvatar {
             return Err(Report::from(SimpleError::new("Vrm model doesn't have the VRM extension")));
         }
         let skeleton = Skeleton::new(&gltf).ok_or(SimpleError::new("Vrm model doesn't have all supported bones"))?;
+        let ik = Ik::new(&gltf, &model, &skeleton);
         Ok(VrmAvatar {
             model,
             skeleton,
+            ik,
             gltf,
+            number: 0,
+            n2: 0,
+            r1: 0.0,
+            r2: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         })
 
+    }
+    pub fn l_n_pos(&self, node: NodeId) -> Vec3 {
+        Mat4::from(self.model.node_get_transform_local(node)).to_scale_rotation_translation().2
     }
     pub fn draw(&self, sk: &StereoKitDraw, pose: &Pose) {
         let matrix = Mat4::from_scale_rotation_translation(
@@ -63,9 +85,15 @@ impl VrmAvatar {
         self.model.node_set_transform_local(node, pose.as_matrix());
     }
     pub fn pose_node_model(&mut self, node: NodeId, pose: Pose) {
-        let rotation: Mat4 = self.model.node_get_transform_model(node).into();
-        let new_matrix = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), rotation.to_scale_rotation_translation().1, pose.position.into());
-        self.model.node_set_transform_model(node, new_matrix.into());
+        //let rotation: Mat4 = self.model.node_get_transform_model(node).into();
+        //let new_matrix = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), rotation.to_scale_rotation_translation().1, pose.position.into());
+        self.model.node_set_transform_model(node, pose.as_matrix());
+    }
+    pub fn transform_node_model(&mut self, node: NodeId, matrix: Mat4) {
+        self.model.node_set_transform_model(node, matrix.into());
+    }
+    pub fn transform_node_local(&mut self, node: NodeId, matrix: Mat4) {
+        self.model.node_set_transform_local(node, matrix.into());
     }
 }
 
