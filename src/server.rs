@@ -2,8 +2,12 @@ use std::thread;
 use std::time::Duration;
 use crate::SERVER;
 use color_eyre::Result;
+use crossbeam::channel::RecvError;
+use laminar::{Packet, Socket, SocketEvent};
 
 pub fn server() -> Result<()> {
+    laminar_version();
+    return Ok(());
     let server_address = "74.207.246.102:8888";
     let config = Default::default();
 
@@ -55,4 +59,25 @@ pub fn server() -> Result<()> {
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
     Ok(())
+}
+
+fn laminar_version() {
+    let mut socket = Socket::bind("74.207.246.102:8888").unwrap();
+    let (mut _rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
+    let _t = thread::spawn(move || socket.start_polling());
+    let mut clients = vec![];
+    loop {
+        match _rx.recv() {
+            Ok(SocketEvent::Packet(packet)) => {
+                for addr in &clients {
+                    let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
+                    tx.send(to_send).unwrap();
+                }
+            }
+            Ok(SocketEvent::Connect(addr)) => {
+                clients.push(addr);
+            }
+            _ => {}
+        }
+    }
 }

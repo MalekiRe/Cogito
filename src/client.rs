@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::stdin;
 use std::net::SocketAddr;
+use std::thread;
 use std::time::{Duration, Instant};
 use glam::Vec3;
 use laminar::{ErrorKind, Packet, Socket, SocketEvent};
@@ -12,9 +13,56 @@ use serde::{Serialize, Deserialize};
 use uflow::SendMode;
 use crate::SERVER;
 use color_eyre::Result;
+use crossbeam::channel::TryRecvError;
 use stereokit::sound::{SoundInstance, SoundStream, SoundT};
 
+pub fn laminar_version() {
+    let server_addr = "74.207.246.102:8888".parse().unwrap();
+    let mut socket = Socket::bind_any().unwrap();
+    let client_addr = socket.local_addr().unwrap();
+    let (mut _rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
+    let _t = thread::spawn(move || socket.start_polling());
+    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init().unwrap();
+    let devices = Microphone::device_count();
+    for i in 0..devices {
+        println!("{}, {}", Microphone::device_name(i), i);
+    }
+    let mic = Microphone::new(1);
+    mic.start();
+    let mut locomotion_tracker = LocomotionTracker::new(1.0, 1.0, 1.0);
+    let sound = mic.get_stream().unwrap();
+    let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
+    sk.run(|sk| {
+        let len = sound.unread_samples();
+        //println!("len: {}", len);
+        let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client_addr, len);
+        //println!("{:#?}", samples_with_pos);
+        sound.read_samples(samples_with_pos.samples.as_mut_slice());
+        let bytes = bincode::serialize(&samples_with_pos).unwrap();
+        let packet = Packet::reliable_unordered(server_addr, bytes);
+        tx.send(packet).unwrap();
+        match _rx.try_recv() {
+            Ok(SocketEvent::Packet(packet)) => {
+                let samples_with_pos: SamplesWithPos = bincode::deserialize(packet.payload()).unwrap();
+                if sounds.contains_key(&samples_with_pos.client) {
+                    let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
+                    stream.write_samples(samples_with_pos.samples.as_slice());
+                    instance.set_position(samples_with_pos.pos);
+                } else {
+                    let sound_stream = SoundStream::create(20.0);
+                    sound_stream.write_samples(samples_with_pos.samples.as_slice());
+                    let instance = sound_stream.play_sound(samples_with_pos.pos, 2.0);
+                    sounds.insert(samples_with_pos.client, (sound_stream, instance));
+                }
+            }
+            _ => {}
+        }
+    }, |_| {});
+}
+
 pub fn client() -> Result<()> {
+    laminar_version();
+    return Ok(());
     let server_address = "74.207.246.102:8888";
     let config = Default::default();
 
