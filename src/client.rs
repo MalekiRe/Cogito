@@ -47,10 +47,12 @@ pub fn client() -> Result<()> {
             let len = sound.unread_samples();
             //println!("len: {}", len);
             let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client.remote_address(), len);
+            //println!("{:#?}", samples_with_pos);
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
+            //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), 0, SendMode::Persistent);
+            client.send(bytes.into_boxed_slice(), 0, SendMode::Reliable);
         //}
         for event in client.step() {
             match event {
