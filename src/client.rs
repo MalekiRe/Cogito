@@ -20,7 +20,7 @@ pub fn laminar_version() {
     let server_addr = "74.207.246.102:8888".parse().unwrap();
     let mut socket = Socket::bind_any().unwrap();
     let client_addr = socket.local_addr().unwrap();
-    let (mut _rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
+    let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move || socket.start_polling());
     let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init().unwrap();
     let devices = Microphone::device_count();
@@ -39,11 +39,10 @@ pub fn laminar_version() {
         //println!("{:#?}", samples_with_pos);
         sound.read_samples(samples_with_pos.samples.as_mut_slice());
         let bytes = bincode::serialize(&samples_with_pos).unwrap();
-        let packet = Packet::unreliable(server_addr, bytes);
-        tx.send(packet).unwrap();
-        match _rx.try_recv() {
+        let packet = Packet::reliable_unordered(server_addr, bytes);
+        match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
-                println!("recieved packet");
+                //println!("recieved packet");
                 let samples_with_pos: SamplesWithPos = bincode::deserialize(packet.payload()).unwrap();
                 if sounds.contains_key(&samples_with_pos.client) {
                     let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
@@ -58,6 +57,7 @@ pub fn laminar_version() {
             }
             _ => {}
         }
+        tx.send(packet).unwrap();
     }, |_| {});
 }
 

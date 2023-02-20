@@ -1,9 +1,12 @@
+use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
 use crate::SERVER;
 use color_eyre::Result;
 use crossbeam::channel::RecvError;
+use glam::Vec3;
 use laminar::{Packet, Socket, SocketEvent};
+use crate::client::SamplesWithPos;
 
 pub fn server() -> Result<()> {
     laminar_version();
@@ -63,20 +66,22 @@ pub fn server() -> Result<()> {
 
 fn laminar_version() {
     let mut socket = Socket::bind("74.207.246.102:8888").unwrap();
-    let (mut _rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
+    let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move || socket.start_polling());
-    let mut clients = vec![];
+    let mut clients = HashSet::new();
     loop {
-        match _rx.try_recv() {
+        match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
+                //println!("recieved packet");
+                clients.insert(packet.addr());
                 for addr in &clients {
-                    let to_send = Packet::unreliable(*addr, packet.payload().to_vec());
+                    //println!("sending to: {}", addr);
+                    let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
                     tx.send(to_send).unwrap();
                 }
             }
             Ok(SocketEvent::Connect(addr)) => {
                 println!("connected: {}", addr);
-                clients.push(addr);
             }
             _ => {}
         }
