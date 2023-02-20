@@ -1,48 +1,53 @@
-use std::collections::HashMap;
-use std::net::SocketAddr;
+use std::thread;
+use crate::SERVER;
 use color_eyre::Result;
-use crossbeam::channel::Sender;
-use laminar::Packet;
-use crate::packet::{ClientPacket, PlayerInfo, ServerPacket, VPacket};
 
-pub fn run_server(server_address: SocketAddr) -> Result<()> {
-    let mut socket = laminar::Socket::bind(server_address)?;
-    let (mut sender, receiver) = (socket.get_packet_sender(), socket.get_event_receiver());
-    let _thread = std::thread::spawn(move || socket.start_polling());
+pub fn server() -> Result<()> {
+    let server_address = "127.0.0.1:8888";
+    let config = Default::default();
 
-    let mut players_info: HashMap<SocketAddr, PlayerInfo> = HashMap::new();
+    // Create a server object
+    let mut server = uflow::server::Server::bind(server_address, config).unwrap();
 
+    let mut client_addresses = Vec::new();
     loop {
-        if let Ok(event) = receiver.recv() {
+        // Process inbound UDP frames and handle events
+        for event in server.step() {
             match event {
-                laminar::SocketEvent::Packet(pack) => {
-                    let client_addr = pack.addr();
-                    let packet = ClientPacket::from_bytes(pack.payload());
-                    match packet {
-                        ClientPacket::ConnectToServer(username) => {
-                            let info = PlayerInfo::new(username);
-                            players_info.insert(client_addr, info.clone());
-                            let packet = ServerPacket::AddPlayer{player_addr: client_addr, player_info: info};
-                            send_to_all(&players_info, &mut sender, packet);
-                        }
-                        ClientPacket::RequestAllPlayerInfo => {
-                            ServerPacket::SendAllPlayerInfo(players_info.clone()).send_reliable_unordered(client_addr, &mut sender);
-                        }
-                        ClientPacket::UpdatePosition(position) => {
-                            let packet = ServerPacket::UpdatePlayerPosition { player_addr: client_addr, position };
-                            println!("sending update position: {:?}", packet);
-                            send_to_all(&players_info, &mut sender, packet);
-                        }
-                    }
+                uflow::server::Event::Connect(client_address) => {
+                    println!("[{:?}] connected", client_address);
+                    client_addresses.push(client_address);
                 }
-                _ => {}
+                uflow::server::Event::Disconnect(client_address) => {
+                    println!("[{:?}] disconnected", client_address);
+                }
+                uflow::server::Event::Error(client_address, err) => {
+                    println!("[{:?}] error: {:?}", client_address, err);
+                }
+                uflow::server::Event::Receive(client_address, packet_data) => {
+                    //let packet_data_utf8 = std::str::from_utf8(&packet_data).unwrap();
+                    //let mut client = server.client(&client_address).unwrap().borrow_mut();
+                    for address in &client_addresses {
+                        // if address != &client_address {
+                            server.client(address).unwrap().borrow_mut().send(
+                                packet_data.clone(), 0, uflow::SendMode::Unreliable
+                            );
+                        //}
+                    }
+                    // Echo the packet reliably on channel 0
+                    //client.send(packet_data, 0, uflow::SendMode::Reliable);
+
+                    // Echo the reverse of the packet unreliably on channel 1
+
+                    //client.send(reversed_string.as_bytes().into(), 1, uflow::SendMode::Unreliable);
+                }
             }
         }
-    }
-}
 
-pub fn send_to_all(players_info: &HashMap<SocketAddr, PlayerInfo>, sender: &mut Sender<Packet>, packet: ServerPacket) {
-    for addr in players_info.keys() {
-        packet.clone().send_reliable_unordered(*addr, sender);
+        // Flush outbound UDP frames
+        server.flush();
+
+        std::thread::sleep(std::time::Duration::from_millis(30));
     }
+    Ok(())
 }

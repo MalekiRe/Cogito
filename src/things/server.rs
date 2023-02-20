@@ -5,7 +5,7 @@ use color_eyre::owo_colors::OwoColorize;
 use color_eyre::Result;
 use laminar::{Packet, SocketEvent};
 
-pub fn server(server_address: SocketAddrV4) -> Result<()> {
+pub fn server(server_address: SocketAddr) -> Result<()> {
     let mut socket = laminar::Socket::bind(server_address)?;
 
     let (mut sender, receiver) = (socket.get_packet_sender(), socket.get_event_receiver());

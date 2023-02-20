@@ -16,7 +16,7 @@ use stereokit_locomotion::LocomotionTracker;
 
 const CLIENT_ADDRESS: &'static str = "127.0.0.1:0245";
 
-pub fn client(server_address: SocketAddrV4, client_address: SocketAddrV4) -> Result<()> {
+pub fn client(server_address: SocketAddr, client_address: SocketAddr) -> Result<()> {
     let mut socket = laminar::Socket::bind(client_address)?;
     let (mut sender, receiver) = (socket.get_packet_sender(), socket.get_event_receiver());
     let sk = stereokit::Settings::default().init()?;
@@ -52,7 +52,7 @@ pub fn client(server_address: SocketAddrV4, client_address: SocketAddrV4) -> Res
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             locomotion_tracker.locomotion_update(sk);
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
-            sender.send(Packet::reliable_unordered(SocketAddr::from(server_address), bytes)).unwrap();
+            sender.send(Packet::reliable_unordered(server_address, bytes)).unwrap();
             //client.send(bytes.into_boxed_slice(), 0, SendMode::Persistent);
             num = 0;
         }
