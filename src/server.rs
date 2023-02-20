@@ -72,10 +72,10 @@ fn laminar_version() {
     loop {
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
-                //println!("recieved packet");
+                println!("recieved packet");
                 clients.insert(packet.addr());
                 for addr in &clients {
-                    //println!("sending to: {}", addr);
+                    println!("sending to: {}", addr);
                     let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
                     tx.send(to_send).unwrap();
                 }

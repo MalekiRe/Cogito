@@ -42,7 +42,7 @@ pub fn laminar_version() {
         let packet = Packet::reliable_unordered(server_addr, bytes);
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
-                //println!("recieved packet");
+                println!("recieved packet");
                 let samples_with_pos: SamplesWithPos = bincode::deserialize(packet.payload()).unwrap();
                 if sounds.contains_key(&samples_with_pos.client) {
                     let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
