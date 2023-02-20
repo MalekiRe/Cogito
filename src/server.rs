@@ -28,11 +28,11 @@ pub fn server() -> Result<()> {
                     //let packet_data_utf8 = std::str::from_utf8(&packet_data).unwrap();
                     //let mut client = server.client(&client_address).unwrap().borrow_mut();
                     for address in &client_addresses {
-                        // if address != &client_address {
+                         if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
                                 packet_data.clone(), 0, uflow::SendMode::Unreliable
                             );
-                        //}
+                        }
                     }
                     // Echo the packet reliably on channel 0
                     //client.send(packet_data, 0, uflow::SendMode::Reliable);

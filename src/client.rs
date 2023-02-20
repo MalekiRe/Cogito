@@ -45,7 +45,7 @@ pub fn client() -> Result<()> {
         if sample_counter >= 2 {
             sample_counter = 0;
             let len = sound.unread_samples();
-            println!("len: {}", len);
+            //println!("len: {}", len);
             let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client.remote_address(), len);
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
@@ -65,7 +65,7 @@ pub fn client() -> Result<()> {
                     println!("server connection error: {:?}", err);
                 }
                 uflow::client::Event::Receive(packet_data) => {
-                    println!("reciving data");
+                    //println!("reciving data");
                     //let packet_data_utf8 = std::str::from_utf8(&packet_data).unwrap();
                     let samples_with_pos: SamplesWithPos = bincode::deserialize(&*packet_data).unwrap();
                     if sounds.contains_key(&samples_with_pos.client) {
