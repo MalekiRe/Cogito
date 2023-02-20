@@ -42,7 +42,7 @@ pub fn client() -> Result<()> {
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
         sample_counter += 1;
-        if sample_counter >= 10 {
+        if sample_counter >= 0 {
              sample_counter = 0;
             let len = sound.unread_samples();
             //println!("len: {}", len);
@@ -50,9 +50,10 @@ pub fn client() -> Result<()> {
             //println!("{:#?}", samples_with_pos);
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
+            println!("len: {}", bytes.len());
             //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Reliable);
+            client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Unreliable);
         }
         for event in client.step() {
             match event {
@@ -74,7 +75,7 @@ pub fn client() -> Result<()> {
                         stream.write_samples(samples_with_pos.samples.as_slice());
                         instance.set_position(samples_with_pos.pos);
                     } else {
-                        let sound_stream = SoundStream::create(3.0);
+                        let sound_stream = SoundStream::create(20.0);
                         sound_stream.write_samples(samples_with_pos.samples.as_slice());
                         let instance = sound_stream.play_sound(samples_with_pos.pos, 2.0);
                         sounds.insert(samples_with_pos.client, (sound_stream, instance));
