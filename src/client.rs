@@ -52,7 +52,7 @@ pub fn client() -> Result<()> {
             //println!("len: {}", bytes.len());
             //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Unreliable);
+            client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Reliable);
         }
         println!("{}", client.send_buffer_size());
         for event in client.step() {

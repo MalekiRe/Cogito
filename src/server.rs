@@ -13,7 +13,7 @@ pub fn server() -> Result<()> {
     loop {
         // Process inbound UDP frames and handle events
         for event in server.step() {
-            server.flush();
+            //server.flush();
             match event {
                 uflow::server::Event::Connect(client_address) => {
                     println!("[{:?}] connected", client_address);
@@ -31,7 +31,7 @@ pub fn server() -> Result<()> {
                     for (num, address) in client_addresses.iter().enumerate() {
                          //if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
-                                packet_data.clone(), num, uflow::SendMode::Unreliable
+                                packet_data.clone(), num, uflow::SendMode::Reliable
                             );
                             server.flush();
                         //}
@@ -48,7 +48,7 @@ pub fn server() -> Result<()> {
 
         // Flush outbound UDP frames
         server.flush();
-        std::thread::sleep(std::time::Duration::from_millis(1));
+        //std::thread::sleep(std::time::Duration::from_millis(1));
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
     Ok(())
