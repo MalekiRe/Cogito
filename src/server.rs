@@ -75,6 +75,7 @@ fn laminar_version() {
                 }
             }
             Ok(SocketEvent::Connect(addr)) => {
+                println!("connected: {}", addr);
                 clients.push(addr);
             }
             _ => {}
