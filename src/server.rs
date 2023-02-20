@@ -30,7 +30,7 @@ pub fn server() -> Result<()> {
                     for address in &client_addresses {
                          if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
-                                packet_data.clone(), 0, uflow::SendMode::Reliable
+                                packet_data.clone(), 0, uflow::SendMode::Persistent
                             );
                         }
                     }

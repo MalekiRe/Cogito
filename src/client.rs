@@ -47,7 +47,7 @@ pub fn client() -> Result<()> {
         sound.read_samples(samples_with_pos.samples.as_mut_slice());
         let bytes = bincode::serialize(&samples_with_pos).unwrap();
         //println!("sending bytes: {:#?}", bytes);
-        client.send(bytes.into_boxed_slice(), 0, SendMode::Reliable);
+        client.send(bytes.into_boxed_slice(), 0, SendMode::Persistent);
 
         for event in client.step() {
             match event {
