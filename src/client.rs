@@ -39,7 +39,7 @@ pub fn laminar_version() {
         //println!("{:#?}", samples_with_pos);
         sound.read_samples(samples_with_pos.samples.as_mut_slice());
         let bytes = bincode::serialize(&samples_with_pos).unwrap();
-        let packet = Packet::reliable_unordered(server_addr, bytes);
+        let packet = Packet::unreliable(server_addr, bytes);
         tx.send(packet).unwrap();
         match _rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {

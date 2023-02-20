@@ -67,10 +67,10 @@ fn laminar_version() {
     let _t = thread::spawn(move || socket.start_polling());
     let mut clients = vec![];
     loop {
-        match _rx.recv() {
+        match _rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
                 for addr in &clients {
-                    let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
+                    let to_send = Packet::unreliable(*addr, packet.payload().to_vec());
                     tx.send(to_send).unwrap();
                 }
             }
