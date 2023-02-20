@@ -15,7 +15,7 @@ use color_eyre::Result;
 use stereokit::sound::{SoundInstance, SoundStream, SoundT};
 
 pub fn client() -> Result<()> {
-    let server_address = "127.0.0.1:8888";
+    let server_address = "74.207.246.102:8888";
     let config = Default::default();
 
     // Create a client object
