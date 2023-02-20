@@ -15,7 +15,7 @@ use stereokit_locomotion::LocomotionTracker;
 
 pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()> {
     let mut client = uflow::client::Client::connect(server_address, Default::default())?;
-    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init()?;
+    let sk = stereokit::Settings::default().init()?;
 
     let devices = stereokit::microphone::Microphone::device_count();
     for i in 0..devices {
@@ -37,6 +37,7 @@ pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
                 }
                 Event::Disconnect => {}
                 Event::Receive(mut sound) => {
+                    println!("recivied sounds");
                     let samples_with_pos: SamplesWithPos = bincode::deserialize(sound.as_mut()).unwrap();
                     let sound_stream = SoundStream::create(samples_with_pos.samples.len() as f32);
                     sound_stream.write_samples(samples_with_pos.samples.as_slice());
@@ -46,7 +47,8 @@ pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
             }
         }
         num += 1;
-        if num == 8 {
+        if num == 25 {
+            println!("sending sounds?");
             let len = sound.unread_samples();
             let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), len);
             sound.read_samples(samples_with_pos.samples.as_mut_slice());

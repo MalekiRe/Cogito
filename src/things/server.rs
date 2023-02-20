@@ -12,17 +12,19 @@ pub fn server<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
         enable_handshake_errors: false,
         endpoint_config: Default::default(),
     })?;
+    let mut client_addresses = vec![];
     loop {
         for event in server.step() {
             match event {
-                Event::Connect(_) => {}
-                Event::Disconnect(_) => {}
+                Event::Connect(connection) => {
+                    println!("connected: {}", connection);
+                    client_addresses.push(connection);
+                }
+                Event::Disconnect(dissconnect) => {
+                    println!("disconnected: {}", dissconnect);
+                }
                 Event::Receive(original_address, packet) => {
-                    let addresses = server.client_addresses();
-                    for address in &addresses {
-                        // if &original_address == address {
-                        //     continue;
-                        // }
+                    for address in &client_addresses {
                         server.client(address).unwrap().borrow_mut()
                             .send(packet.clone(), 0, SendMode::Persistent)
                     }
