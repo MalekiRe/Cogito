@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-stereokit = { path = "../../../stereokit-rs"}
+stereokit = { path = "../../../stereokit-rs", features = ["physics"]}
 goth-gltf = { git = "https://github.com/MalekiRe/goth-gltf"}
 color-eyre = "0.6.2"
 glam = {version = "0.22.0", features = ["mint"]}

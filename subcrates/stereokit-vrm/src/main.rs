@@ -1,12 +1,13 @@
 mod bones;
 mod ik;
 
+use std::fs::File;
 use std::path::Path;
 use stereokit::lifecycle::{StereoKitContext, StereoKitDraw};
 use color_eyre::{Report, Result};
 use glam::{Mat4, Vec3};
 use goth_gltf::Gltf;
-use simple_error::SimpleError;
+use simple_error::{SimpleError, SimpleResult};
 use stereokit::color_named::WHITE;
 use stereokit::model::{Model, NodeId};
 use stereokit::pose::Pose;
@@ -43,7 +44,7 @@ impl VrmAvatar {
         if gltf.extensions.vrm.is_none() {
             return Err(Report::from(SimpleError::new("Vrm model doesn't have the VRM extension")));
         }
-        let skeleton = Skeleton::new(&gltf).ok_or(SimpleError::new("Vrm model doesn't have all supported bones"))?;
+        let skeleton = Skeleton::new(&gltf)?;
         let ik = Ik::new(&gltf, &model, &skeleton);
         Ok(VrmAvatar {
             model,
@@ -70,15 +71,15 @@ impl VrmAvatar {
             pose.position.into()).into();
         self.model.draw(sk, matrix, WHITE, RenderLayer::Layer0);
     }
-    pub fn _get_node(gltf: &VrmGltf, node: &str) -> Option<NodeId> {
+    pub fn _get_node(gltf: &VrmGltf, node: &str) -> SimpleResult<NodeId> {
         for b in &gltf.extensions.vrm.clone().unwrap().humanoid.human_bones {
             if b.bone == node {
-                return NodeId::try_from(b.node as i32);
+                return NodeId::try_from(b.node as i32).ok_or(SimpleError::new(format!("missing bone: {}", node)));
             }
         }
-        return None;
+        return Err(SimpleError::new(format!("missing bone: {}", node)));
     }
-    pub fn get_node(&self, node: &str) -> Option<NodeId> {
+    pub fn get_node(&self, node: &str) -> SimpleResult<NodeId> {
         Self::_get_node(&self.gltf, node)
     }
     pub fn pose_node_local(&mut self, node: NodeId, pose: Pose) {
@@ -116,4 +117,13 @@ mod test {
         }, |_| {});
         Ok(())
     }
+}
+
+pub fn main() {
+    let sk: stereokit::StereoKit = stereokit::Settings::default().init().unwrap();
+    let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm").unwrap();
+    sk.run(|sk| {
+        avatar.draw(sk, &Pose::IDENTITY);
+        avatar.update_ik(sk);
+    }, |_| {});
 }

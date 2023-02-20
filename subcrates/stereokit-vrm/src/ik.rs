@@ -20,7 +20,7 @@ impl VrmAvatar {
     pub fn update_ik(&mut self, sk: &StereoKitDraw) {
 
         //sk.input_hand_visible(Handed::Right, false);
-
+        self.do_other_ik(sk);
         let right_hand = sk.input_hand(Handed::Right);
 
 
@@ -83,6 +83,10 @@ impl VrmAvatar {
         let mut tmp: Quat = joint.orientation.into();
     
         self.pose_node_model(node, Pose::new(joint.position, tmp*correction_quat));
+    }
+
+    pub fn do_other_ik(&mut self, sk: &StereoKitDraw) {
+
     }
 
 }

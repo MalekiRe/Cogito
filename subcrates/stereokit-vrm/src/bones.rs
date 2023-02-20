@@ -20,10 +20,35 @@
 //     }
 // }
 
+use simple_error::SimpleResult;
 use stereokit::model::NodeId;
 use crate::{VrmAvatar, VrmGltf};
 
 
+#[derive(Copy, Clone, Debug)]
+pub struct Torso {
+    pub hips: NodeId,
+    pub spine: NodeId,
+    pub chest: NodeId,
+    pub upper_chest: NodeId,
+    pub neck: NodeId,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Head {
+    head: NodeId,
+    left_eye: Option<NodeId>,
+    right_eye: Option<NodeId>,
+    jaw: Option<NodeId>,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Leg {
+    upper_leg: NodeId,
+    lower_leg: NodeId,
+    foot: NodeId,
+    toes: Option<NodeId>,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Finger {
@@ -44,20 +69,40 @@ pub struct FingerBone {
 #[derive(Copy, Clone, Debug)]
 pub struct Arm {
     pub hand: NodeId,
+    pub shoulder: Option<NodeId>,
+    pub upper_arm: NodeId,
+    pub lower_arm: NodeId,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct Skeleton {
+    pub head: Head,
+    pub torso: Torso,
     pub right_finger: Finger,
     pub left_finger: Finger,
     pub right_arm: Arm,
     pub left_arm: Arm,
+    pub left_leg: Leg,
+    pub right_leg: Leg,
 }
 
 impl Skeleton {
-    pub fn new(gltf: &VrmGltf) -> Option<Self> {
-        Some(
+    pub fn new(gltf: &VrmGltf) -> SimpleResult<Self> {
+        Ok(
             Skeleton {
+                head: Head {
+                    head: VrmAvatar::_get_node(gltf, "head")?,
+                    left_eye: VrmAvatar::_get_node(gltf, "leftEye").ok(),
+                    right_eye: VrmAvatar::_get_node(gltf, "rightEye").ok(),
+                    jaw: VrmAvatar::_get_node(gltf, "jaw").ok(),
+                },
+                torso: Torso {
+                    hips: VrmAvatar::_get_node(gltf, "hips")?,
+                    spine: VrmAvatar::_get_node(gltf, "spine")?,
+                    chest: VrmAvatar::_get_node(gltf, "chest")?,
+                    upper_chest: VrmAvatar::_get_node(gltf, "upperChest")?,
+                    neck: VrmAvatar::_get_node(gltf, "neck")?,
+                },
                 right_finger: Finger {
                     thumb: FingerBone {
                         intermediate: VrmAvatar::_get_node(gltf, "rightThumbIntermediate")?,
@@ -113,10 +158,28 @@ impl Skeleton {
                     },
                 },
                 right_arm: Arm {
-                    hand: VrmAvatar::_get_node(gltf, "rightHand")?
+                    hand: VrmAvatar::_get_node(gltf, "rightHand")?,
+                    shoulder: VrmAvatar::_get_node(gltf, "rightShoulder").ok(),
+                    upper_arm: VrmAvatar::_get_node(gltf, "rightUpperArm")?,
+                    lower_arm: VrmAvatar::_get_node(gltf, "rightLowerArm")?,
                 },
                 left_arm: Arm {
                     hand: VrmAvatar::_get_node(gltf, "leftHand")?,
+                    shoulder: VrmAvatar::_get_node(gltf, "leftShoulder").ok(),
+                    upper_arm: VrmAvatar::_get_node(gltf, "leftUpperArm")?,
+                    lower_arm: VrmAvatar::_get_node(gltf, "leftLowerArm")?,
+                },
+                left_leg: Leg {
+                    upper_leg: VrmAvatar::_get_node(gltf, "leftUpperLeg")?,
+                    lower_leg: VrmAvatar::_get_node(gltf, "leftLowerLeg")?,
+                    foot: VrmAvatar::_get_node(gltf, "leftFoot")?,
+                    toes: VrmAvatar::_get_node(gltf, "leftToes").ok(),
+                },
+                right_leg: Leg {
+                    upper_leg: VrmAvatar::_get_node(gltf, "rightUpperLeg")?,
+                    lower_leg: VrmAvatar::_get_node(gltf, "rightLowerLeg")?,
+                    foot: VrmAvatar::_get_node(gltf, "rightFoot")?,
+                    toes: VrmAvatar::_get_node(gltf, "rightToes").ok(),
                 },
             }
         )

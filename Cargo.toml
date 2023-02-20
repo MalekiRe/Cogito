@@ -12,7 +12,7 @@ members = [
 
 [dependencies]
 glam = {version = "0.22.0", features = ["mint", "serde", "bytemuck"]}
-stereokit = { path = "../stereokit-rs"}
+stereokit = { path = "../stereokit-rs", features = ["physics"]}
 serde = "1.0.152"
 color-eyre = "0.6.2"
 mint = {version = "0.5.9", features = ["serde"]}

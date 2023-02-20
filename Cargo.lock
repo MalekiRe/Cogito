@@ -1256,42 +1256,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "stereokit"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13b768594b671e7d31f09f12f4ebe887325fa8b0e64c9c794a79ad64ce8dd5f0"
-dependencies = [
- "bitflags",
- "bitflags_serde_shim",
- "color-eyre",
- "derive_builder",
- "derive_is_enum_variant",
- "mint",
- "ndk-context",
- "num-derive",
- "num_enum",
- "once_cell",
- "serde",
- "serde_repr",
- "stereokit-sys",
- "tracing",
- "ustr",
-]
-
-[[package]]
 name = "stereokit-locomotion"
 version = "0.1.0"
 dependencies = [
  "color-eyre",
  "glam",
- "stereokit 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "stereokit",
 ]
 
 [[package]]
 name = "stereokit-sys"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "661387a9d64be249d857c6b4138dc0236340d3ccf647dc3ef4538eadc3d19bfc"
+version = "2.4.0"
 dependencies = [
  "bindgen",
  "cmake",
@@ -1307,7 +1282,7 @@ dependencies = [
  "goth-gltf 0.1.0 (git+https://github.com/MalekiRe/goth-gltf)",
  "k",
  "simple-error",
- "stereokit 0.15.0",
+ "stereokit",
 ]
 
 [[package]]
@@ -1527,7 +1502,7 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "stereokit 0.15.0",
+ "stereokit",
  "x11rb 0.11.1",
 ]
 

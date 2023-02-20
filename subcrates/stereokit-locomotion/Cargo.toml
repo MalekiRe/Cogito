@@ -12,6 +12,6 @@ categories = ["game-development"]
 
 
 [dependencies]
-stereokit = "0.15.0"
+stereokit = { path = "../../../stereokit-rs", features = []}
 glam = { version = "0.22.0", features = ["mint"]}
 color-eyre = "0.6.2"
