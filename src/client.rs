@@ -42,8 +42,8 @@ pub fn client() -> Result<()> {
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
         // sample_counter += 1;
-        // if sample_counter >= 60 {
-        //     sample_counter = 0;
+        if sample_counter >= 60 {
+             sample_counter = 0;
             let len = sound.unread_samples();
             //println!("len: {}", len);
             let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client.remote_address(), len);
@@ -52,8 +52,8 @@ pub fn client() -> Result<()> {
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
             //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), 0, SendMode::Unreliable);
-        //}
+            client.send(bytes.into_boxed_slice(), 0, SendMode::Reliable);
+        }
         for event in client.step() {
             match event {
                 uflow::client::Event::Connect => {
