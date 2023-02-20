@@ -51,7 +51,7 @@ pub fn server() -> Result<()> {
         //server.flush();
         //std::thread::sleep(Duration::from_nanos(2));
         server.flush();
-        std::thread::sleep(std::time::Duration::from_millis(3));
+        std::thread::sleep(std::time::Duration::from_micros(30));
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
     Ok(())
