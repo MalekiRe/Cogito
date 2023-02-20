@@ -16,7 +16,9 @@ use stereokit_locomotion::LocomotionTracker;
 pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()> {
     let mut client = uflow::client::Client::connect(server_address, Default::default())?;
     let sk = stereokit::Settings::default().init()?;
-
+    if !client.is_active() {
+        panic!()
+    }
     let devices = stereokit::microphone::Microphone::device_count();
     for i in 0..devices {
         println!("{}, {}", Microphone::device_name(i), i);
@@ -27,7 +29,7 @@ pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
     //sound.play_sound(Vec3::new(0.0, 0.0, 0.0), 1.0);
     let mut locomotion_tracker = LocomotionTracker::new(1.0, 1.0, 1.0);
     let sound = mic.get_stream().unwrap();
-    sound.play_sound(Vec3::new(0.0, 0.0, 0.0), 10.0);
+    //sound.play_sound(Vec3::new(0.0, 0.0, 0.0), 10.0);
     let mut num = 0;
     sk.run(|sk| {
         for event in client.step() {
