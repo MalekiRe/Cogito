@@ -30,7 +30,7 @@ pub fn server() -> Result<()> {
                     for (num, address) in client_addresses.iter().enumerate() {
                          //if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
-                                packet_data.clone(), num, uflow::SendMode::Persistent
+                                packet_data.clone(), num, uflow::SendMode::Reliable
                             );
                         //}
                     }

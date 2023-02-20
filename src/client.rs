@@ -52,7 +52,7 @@ pub fn client() -> Result<()> {
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
             //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), 0, SendMode::Reliable);
+            client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Reliable);
         }
         for event in client.step() {
             match event {
