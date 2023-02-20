@@ -32,7 +32,7 @@ pub fn server() -> Result<()> {
                     for (num, address) in client_addresses.iter().enumerate() {
                          //if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
-                                packet_data.clone(), num, uflow::SendMode::Reliable
+                                packet_data.clone(), num, uflow::SendMode::Unreliable
                             );
                             //server.flush();
                         //}
@@ -51,7 +51,7 @@ pub fn server() -> Result<()> {
         //server.flush();
         //std::thread::sleep(Duration::from_nanos(2));
         server.flush();
-        std::thread::sleep(std::time::Duration::from_millis(300));
+        //std::thread::sleep(std::time::Duration::from_millis(300));
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
     Ok(())
