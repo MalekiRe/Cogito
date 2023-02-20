@@ -84,7 +84,7 @@ pub fn client() -> Result<()> {
             }
         }
         client.flush();
-        std::thread::sleep(Duration::from_millis(5));
+        std::thread::sleep(Duration::from_millis(10));
     }, |_| {});
     // loop {
     // }
