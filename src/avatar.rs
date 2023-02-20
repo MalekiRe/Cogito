@@ -82,26 +82,26 @@ impl SidedNodes {
         Self {}
     }
 }
+//
+// impl Avatar {
+//     pub fn from_file(sk: &impl StereoKitContext, file_path: impl AsRef<Path>) -> Result<Self> {
+//         let model = Model::from_file(sk, file_path.as_ref(), None)?;
+//         let avatar_nodes = AvatarNodes::from_model(sk, &model);
+//         let json = import_json(file_path.as_ref().to_str().unwrap());
+//         println!("{:#?}", json);
+//         Ok(Self {
+//             model,
+//             avatar_nodes,
+//         })
+//     }
+//     pub fn draw(&self, sk: &StereoKitDraw, pose: Pose) {
+//         let mat = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), pose.orientation.into(), pose.position.into());
+//         self.model.draw(sk, mat.into(), WHITE, RenderLayer::Layer0);
+//     }
+// }
 
-impl Avatar {
-    pub fn from_file(sk: &impl StereoKitContext, file_path: impl AsRef<Path>) -> Result<Self> {
-        let model = Model::from_file(sk, file_path.as_ref(), None)?;
-        let avatar_nodes = AvatarNodes::from_model(sk, &model);
-        let json = import_json(file_path.as_ref().to_str().unwrap());
-        println!("{:#?}", json);
-        Ok(Self {
-            model,
-            avatar_nodes,
-        })
-    }
-    pub fn draw(&self, sk: &StereoKitDraw, pose: Pose) {
-        let mat = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), pose.orientation.into(), pose.position.into());
-        self.model.draw(sk, mat.into(), WHITE, RenderLayer::Layer0);
-    }
-}
-
-pub fn import_json(file: &str) {
-    let bytes = std::fs::read(&file).unwrap();
-    let thing: goth_gltf::Gltf<goth_gltf::default_extensions::Extensions> = goth_gltf::Gltf::from_bytes(&bytes).unwrap().0;
-    println!("{:#?}", thing);
-}
+// pub fn import_json(file: &str) {
+//     let bytes = std::fs::read(&file).unwrap();
+//     let thing: goth_gltf::Gltf<goth_gltf::default_extensions::Extensions> = goth_gltf::Gltf::from_bytes(&bytes).unwrap().0;
+//     println!("{:#?}", thing);
+// }

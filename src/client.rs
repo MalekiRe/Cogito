@@ -41,50 +41,50 @@ pub fn run_client(client_address: SocketAddr, server_address: SocketAddr) -> Res
     }*/
     //let _thread = thread::spawn(move || socket.start_polling());
 
-    let player_model = Avatar::from_file(&sk, "Malek.vrm").unwrap();
-    sk.run(|sk| {
-
-        if sk.input_head().position != prev_position.into() {
-            prev_position = sk.input_head().position.into();
-            //ClientPacket::UpdatePosition(prev_position).send_reliable_unordered(server_address, &mut sender);
-        }
-        let pose = sk.input_head();
-        player_model.draw(sk, pose);
-        // let hand = sk.input_hand(Handed::Right).wrist.position.into();
-        // let mat = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), Quat::IDENTITY, hand);
-        // player_model.node_set_transform_model(node, mat.into());
-
-        //socket.manual_poll(Instant::now());
-
-
-        /*match receiver.try_recv() {
-            Ok(SocketEvent::Packet(pack)) => {
-                let packet = ServerPacket::from_bytes(pack.payload());
-                match packet {
-                    ServerPacket::UpdatePlayerPosition { player_addr, position } => {
-                        println!("receiving updated player: {}, position: {}", player_addr, position);
-                        players_info.get_mut(&player_addr).unwrap().position = position;
-                    }
-                    ServerPacket::AddPlayer { player_addr, player_info } => {
-                        players_info.insert(player_addr, player_info);
-                    }
-                    _ => {}
-                }
-            }
-            _ => {} /*println!("Silence..")*/,
-        }*/
-
-        /*
-        for (addr, player_info) in &players_info {
-            let mut new_position = player_info.position;
-            if addr == &client_address {
-                new_position = sk.input_head().position.into();
-            }
-            let new_mat = glam::Mat4::from_scale_rotation_translation(Vec3::new(0.1, 0.1, 0.1), glam::Quat::IDENTITY, new_position);
-            player_model.draw(&sk, new_mat.into(), WHITE, RenderLayer::Layer0);
-        }*/
-
-    }, |_| {});
+    // let player_model = Avatar::from_file(&sk, "Malek.vrm").unwrap();
+    // sk.run(|sk| {
+    //
+    //     if sk.input_head().position != prev_position.into() {
+    //         prev_position = sk.input_head().position.into();
+    //         //ClientPacket::UpdatePosition(prev_position).send_reliable_unordered(server_address, &mut sender);
+    //     }
+    //     let pose = sk.input_head();
+    //     player_model.draw(sk, pose);
+    //     // let hand = sk.input_hand(Handed::Right).wrist.position.into();
+    //     // let mat = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), Quat::IDENTITY, hand);
+    //     // player_model.node_set_transform_model(node, mat.into());
+    //
+    //     //socket.manual_poll(Instant::now());
+    //
+    //
+    //     /*match receiver.try_recv() {
+    //         Ok(SocketEvent::Packet(pack)) => {
+    //             let packet = ServerPacket::from_bytes(pack.payload());
+    //             match packet {
+    //                 ServerPacket::UpdatePlayerPosition { player_addr, position } => {
+    //                     println!("receiving updated player: {}, position: {}", player_addr, position);
+    //                     players_info.get_mut(&player_addr).unwrap().position = position;
+    //                 }
+    //                 ServerPacket::AddPlayer { player_addr, player_info } => {
+    //                     players_info.insert(player_addr, player_info);
+    //                 }
+    //                 _ => {}
+    //             }
+    //         }
+    //         _ => {} /*println!("Silence..")*/,
+    //     }*/
+    //
+    //     /*
+    //     for (addr, player_info) in &players_info {
+    //         let mut new_position = player_info.position;
+    //         if addr == &client_address {
+    //             new_position = sk.input_head().position.into();
+    //         }
+    //         let new_mat = glam::Mat4::from_scale_rotation_translation(Vec3::new(0.1, 0.1, 0.1), glam::Quat::IDENTITY, new_position);
+    //         player_model.draw(&sk, new_mat.into(), WHITE, RenderLayer::Layer0);
+    //     }*/
+    //
+    // }, |_| {});
 
     Ok(())
 }

@@ -1,24 +1,22 @@
 use color_eyre::Result;
 use crossbeam::channel::at;
 use stereokit::Settings;
-use captis::Capturer;
-use x11rb::connection::Connection;
 // use xcb::composite::{NameWindowPixmap, RedirectSubwindows};
 // use xcb::{Connection, x, XidNew};
 // use xcb::render::{CreatePicture, Pictformat, Picture, QueryPictFormats, QueryPictFormatsCookie};
 // use xcb::x::{Drawable, GetWindowAttributes, GetWindowAttributesReply};
 
 pub fn run() -> Result<()> {
-    let capture = captis::init_capturer()?;
-    let sk = Settings::default().init()?;
-
-
-
-    sk.run(|sk| {
-        let image = capture.capture_primary().unwrap();
-
-    }, |_| {});
     Ok(())
+    // let sk = Settings::default().init()?;
+    //
+    //
+    //
+    // sk.run(|sk| {
+    //     let image = capture.capture_primary().unwrap();
+    //
+    // }, |_| {});
+    // Ok(())
     // let (conn, screen_num) = xcb::Connection::connect(None)?;
     // let setup = conn.get_setup();
     // let screen = setup.roots().nth(screen_num as usize).unwrap();

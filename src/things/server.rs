@@ -20,9 +20,9 @@ pub fn server<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
                 Event::Receive(original_address, packet) => {
                     let addresses = server.client_addresses();
                     for address in &addresses {
-                        if &original_address == address {
-                            continue;
-                        }
+                        // if &original_address == address {
+                        //     continue;
+                        // }
                         server.client(address).unwrap().borrow_mut()
                             .send(packet.clone(), 0, SendMode::TimeSensitive)
                     }
