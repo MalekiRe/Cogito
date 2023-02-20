@@ -1,4 +1,5 @@
 use std::thread;
+use std::time::Duration;
 use crate::SERVER;
 use color_eyre::Result;
 
@@ -48,6 +49,7 @@ pub fn server() -> Result<()> {
 
         // Flush outbound UDP frames
         server.flush();
+        std::thread::sleep(Duration::from_nanos(2));
         //std::thread::sleep(std::time::Duration::from_millis(1));
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
