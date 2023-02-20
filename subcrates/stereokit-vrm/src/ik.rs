@@ -73,8 +73,6 @@ impl VrmAvatar {
         self.cats_meow(self.skeleton.right_finger.thumb.intermediate, right_hand.fingers[0][2], right_hand_xr_correction_thumb);
         self.cats_meow(self.skeleton.right_finger.thumb.distal, right_hand.fingers[0][3], right_hand_xr_correction_thumb);
 
-
-
     }
 
     pub fn cats_meow(&mut self, node: NodeId, joint: Joint, correction_quat: Quat) {
@@ -86,9 +84,36 @@ impl VrmAvatar {
     }
 
     pub fn do_other_ik(&mut self, sk: &StereoKitDraw) {
-
+        let head_offset = &self.gltf.extensions.vrm.as_ref().unwrap().first_person.first_person_bone_offset;
+        let head_offset = Vec3::new(head_offset.x, head_offset.y, head_offset.z);
+        //println!("{}", head_offset);
+        let mut sk_head = sk.input_head();
+        sk_head.position = (Vec3::from(sk_head.position) ).into();
+        let head = self.skeleton.head.head;
+        self.model.node_set_transform_model(head, Mat4::from_scale_rotation_translation(Vec3::default(), sk_head.orientation.into(), sk_head.position.into()).into());
+        let difference = self.ik.head - self.ik.hip;
+        let (x, y, z) = angles_from_quat(sk_head.orientation.into());
+        self.pose_node_model(self.skeleton.torso.hips, Pose::new(Vec3::from(sk_head.position) - difference,  quat_from_angles(0.0, y, 0.0)));
     }
 
+    pub fn hide_nodes(&self, mut node: NodeId) {
+        //println!("hiding node: {:?}", node);
+        self.model.node_set_visible(node, false);
+        match self.model.node_child(node) {
+            None => {}
+            Some(child) => {
+                self.hide_nodes(child);
+            }
+        }
+        match self.model.node_sibling(node) {
+            None => {
+                return;
+            }
+            Some(sibling) => {
+                self.hide_nodes(sibling)
+            }
+        }
+    }
 }
 
 
@@ -103,6 +128,8 @@ pub fn apply_correction(mut pose: Pose, rotation: Quat) -> Pose {
 pub struct Ik {
     avatar_hand_size: Vec3,
     head_root_offset: Vec3,
+    head: Vec3,
+    hip: Vec3,
 }
 impl Ik {
     pub fn new(gltf: &VrmGltf, model: &Model, skeleton: &Skeleton) -> Self {
@@ -110,10 +137,13 @@ impl Ik {
 
         let head_root_offset = &gltf.extensions.vrm.as_ref().unwrap().first_person.first_person_bone_offset;
         let head_root_offset = Vec3::new(head_root_offset.x, head_root_offset.y, head_root_offset.z);
-
+        let head = Mat4::from(model.node_get_transform_model(skeleton.head.head)).to_scale_rotation_translation().2;
+        let hip = Mat4::from(model.node_get_transform_model(skeleton.torso.hips)).to_scale_rotation_translation().2;
         Self {
             avatar_hand_size: Default::default(),
             head_root_offset,
+            head,
+            hip,
         }
     }
 }

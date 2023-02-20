@@ -12,9 +12,10 @@ use stereokit::color_named::WHITE;
 use stereokit::model::{Model, NodeId};
 use stereokit::pose::Pose;
 use stereokit::render::RenderLayer;
+use stereokit::shader::Shader;
 use stereokit::values::MMatrix;
 use crate::bones::Skeleton;
-use crate::ik::Ik;
+use crate::ik::{Ik, quat_from_angles};
 
 pub type VrmGltf = Gltf<goth_gltf::default_extensions::Extensions>;
 
@@ -33,9 +34,16 @@ pub struct VrmAvatar {
     z: f32,
 }
 
+pub static mut VRM_SHADER: Option<Shader> = None;
+
 impl VrmAvatar {
-    pub fn load_from_file(sk: &impl StereoKitContext, file: impl AsRef<Path>) -> Result<Self> {
-        let model = Model::from_file(sk, file.as_ref(), None)?;
+    pub fn get_shader(sk: &impl StereoKitContext) -> &'static Shader {
+        unsafe {
+            VRM_SHADER.as_ref().unwrap()
+        }
+    }
+    pub fn load_from_file(sk: &impl StereoKitContext, file: impl AsRef<Path>, shader: &Shader) -> Result<Self> {
+        let model = Model::from_file(sk, file.as_ref(), Some(shader))?;
         let bytes = std::fs::read(&file).unwrap();
         let (gltf, b): (
             goth_gltf::Gltf<goth_gltf::default_extensions::Extensions>,
@@ -121,7 +129,9 @@ mod test {
 
 pub fn main() {
     let sk: stereokit::StereoKit = stereokit::Settings::default().init().unwrap();
-    let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm").unwrap();
+    let shader = Shader::from_file(&sk, "malek.sks").unwrap();
+    let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap();
+
     sk.run(|sk| {
         avatar.draw(sk, &Pose::IDENTITY);
         avatar.update_ik(sk);

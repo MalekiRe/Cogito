@@ -36,10 +36,10 @@ pub struct Torso {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Head {
-    head: NodeId,
-    left_eye: Option<NodeId>,
-    right_eye: Option<NodeId>,
-    jaw: Option<NodeId>,
+    pub head: NodeId,
+    pub left_eye: Option<NodeId>,
+    pub right_eye: Option<NodeId>,
+    pub jaw: Option<NodeId>,
 }
 
 #[derive(Copy, Clone, Debug)]
