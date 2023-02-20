@@ -26,7 +26,7 @@ pub fn client() -> Result<()> {
     let stdin = stdin();
     let mut s_buffer = String::new();
 
-    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init().unwrap();
+    let sk = stereokit::Settings::default().init().unwrap();
     let devices = Microphone::device_count();
     for i in 0..devices {
         println!("{}, {}", Microphone::device_name(i), i);
@@ -42,7 +42,7 @@ pub fn client() -> Result<()> {
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
         sample_counter += 1;
-        if sample_counter >= 2 {
+        if sample_counter >= 10 {
             sample_counter = 0;
             let len = sound.unread_samples();
             //println!("len: {}", len);
@@ -50,7 +50,7 @@ pub fn client() -> Result<()> {
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
             //println!("sending bytes: {:#?}", bytes);
-            client.send(bytes.into_boxed_slice(), 0, SendMode::Unreliable);
+            client.send(bytes.into_boxed_slice(), 0, SendMode::Reliable);
         }
 
         for event in client.step() {
