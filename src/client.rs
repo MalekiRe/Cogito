@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::stdin;
 use std::net::SocketAddr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use glam::Vec3;
 use laminar::{ErrorKind, Packet, Socket, SocketEvent};
 use stereokit::input::StereoKitInput;
@@ -84,6 +84,7 @@ pub fn client() -> Result<()> {
             }
         }
         client.flush();
+        std::thread::sleep(Duration::from_millis(5));
     }, |_| {});
     // loop {
     // }
