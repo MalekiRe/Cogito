@@ -27,10 +27,10 @@ pub fn server() -> Result<()> {
                 uflow::server::Event::Receive(client_address, packet_data) => {
                     //let packet_data_utf8 = std::str::from_utf8(&packet_data).unwrap();
                     //let mut client = server.client(&client_address).unwrap().borrow_mut();
-                    for address in &client_addresses {
+                    for (num, address) in client_addresses.iter().enumerate() {
                          //if address != &client_address {
                             server.client(address).unwrap().borrow_mut().send(
-                                packet_data.clone(), 0, uflow::SendMode::Unreliable
+                                packet_data.clone(), num, uflow::SendMode::Persistent
                             );
                         //}
                     }

@@ -41,8 +41,8 @@ pub fn client() -> Result<()> {
 
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
-        // sample_counter += 1;
-        if sample_counter >= 60 {
+        sample_counter += 1;
+        if sample_counter >= 10 {
              sample_counter = 0;
             let len = sound.unread_samples();
             //println!("len: {}", len);
