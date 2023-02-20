@@ -6,6 +6,7 @@ use color_eyre::Result;
 use glam::Vec3;
 use serde::{Deserialize, Serialize};
 use stereokit::input::StereoKitInput;
+use stereokit::lifecycle::DisplayMode;
 use stereokit::microphone::Microphone;
 use stereokit::sound::{SoundStream, SoundT};
 use uflow::client::Event;
@@ -14,7 +15,7 @@ use stereokit_locomotion::LocomotionTracker;
 
 pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()> {
     let mut client = uflow::client::Client::connect(server_address, Default::default())?;
-    let sk = stereokit::Settings::default().init()?;
+    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init()?;
 
     let devices = stereokit::microphone::Microphone::device_count();
     for i in 0..devices {
@@ -27,6 +28,7 @@ pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
     let mut locomotion_tracker = LocomotionTracker::new(1.0, 1.0, 1.0);
     let sound = mic.get_stream().unwrap();
     sound.play_sound(Vec3::new(0.0, 0.0, 0.0), 10.0);
+    let mut num = 0;
     sk.run(|sk| {
         for event in client.step() {
             match event {
@@ -43,13 +45,16 @@ pub fn client<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
                 Event::Error(_) => {}
             }
         }
-        
-        let len = sound.unread_samples();
-        let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), len);
-        sound.read_samples(samples_with_pos.samples.as_mut_slice());
-        locomotion_tracker.locomotion_update(sk);
-        let bytes = bincode::serialize(&samples_with_pos).unwrap();
-        client.send(bytes.into_boxed_slice() ,0, SendMode::TimeSensitive);
+        num += 1;
+        if num == 8 {
+            let len = sound.unread_samples();
+            let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), len);
+            sound.read_samples(samples_with_pos.samples.as_mut_slice());
+            locomotion_tracker.locomotion_update(sk);
+            let bytes = bincode::serialize(&samples_with_pos).unwrap();
+            client.send(bytes.into_boxed_slice(), 0, SendMode::Persistent);
+            num = 0;
+        }
         client.flush();
     }, |_|{});
     Ok(())

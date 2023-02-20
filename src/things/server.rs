@@ -24,7 +24,7 @@ pub fn server<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()
                         //     continue;
                         // }
                         server.client(address).unwrap().borrow_mut()
-                            .send(packet.clone(), 0, SendMode::TimeSensitive)
+                            .send(packet.clone(), 0, SendMode::Persistent)
                     }
                 }
                 Event::Error(_, _) => {}
