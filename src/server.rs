@@ -33,6 +33,7 @@ pub fn server() -> Result<()> {
                             server.client(address).unwrap().borrow_mut().send(
                                 packet_data.clone(), num, uflow::SendMode::Unreliable
                             );
+                            server.flush();
                         //}
                     }
                     // Echo the packet reliably on channel 0
