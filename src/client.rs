@@ -18,7 +18,7 @@ use stereokit::sound::{SoundInstance, SoundStream, SoundT};
 
 pub fn laminar_version() {
     let server_addr = "74.207.246.102:8888".parse().unwrap();
-    let mut socket = Socket::bind_any().unwrap();
+    let mut socket = Socket::bind("0.0.0.0:8008").unwrap();
     let client_addr = socket.local_addr().unwrap();
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move || socket.start_polling());

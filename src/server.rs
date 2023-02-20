@@ -65,7 +65,7 @@ pub fn server() -> Result<()> {
 }
 
 fn laminar_version() {
-    let mut socket = Socket::bind("127.0.0.1:8888").unwrap();
+    let mut socket = Socket::bind("0.0.0.0:8888").unwrap();
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move || socket.start_polling());
     let mut clients = HashSet::new();
