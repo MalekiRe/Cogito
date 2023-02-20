@@ -23,7 +23,6 @@ crossbeam = "0.8.2"
 bincode = "1.3.3"
 anarchist-readable-name-generator-lib = "0.1.1"
 rand = "0.8.5"
-uflow = { path = "../uflow"}
 #xcb = {version = "1.2.0", features = ["composite", "x11"]}
 #xcb-util = {  version = "0.4.0" , features = ["image", "cursor", "ewmh", "misc", "shm"]}
 #x11rb = {version = "0.11.1", features = ["all-extensions"]}

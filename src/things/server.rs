@@ -1,38 +1,52 @@
-use std::net;
-use std::net::SocketAddr;
+use std::{net, thread};
+use std::net::{SocketAddr, SocketAddrV4};
+use std::time::Instant;
 use color_eyre::owo_colors::OwoColorize;
 use color_eyre::Result;
-use uflow::SendMode;
-use uflow::server::Event;
+use laminar::{Packet, SocketEvent};
 
-pub fn server<Address: net::ToSocketAddrs>(server_address: Address) -> Result<()> {
-    let mut server = uflow::server::Server::bind(server_address, uflow::server::Config{
-        max_total_connections: 5,
-        max_active_connections: 5,
-        enable_handshake_errors: false,
-        endpoint_config: Default::default(),
-    })?;
+pub fn server(server_address: SocketAddrV4) -> Result<()> {
+    let mut socket = laminar::Socket::bind(server_address)?;
+
+    let (mut sender, receiver) = (socket.get_packet_sender(), socket.get_event_receiver());
     let mut client_addresses = vec![];
+    let _t = thread::spawn(move || socket.start_polling());
     loop {
-        for event in server.step() {
+        if let Ok(event) = receiver.try_recv() {
             match event {
-                Event::Connect(connection) => {
-                    println!("connected: {}", connection);
-                    client_addresses.push(connection);
-                }
-                Event::Disconnect(dissconnect) => {
-                    println!("disconnected: {}", dissconnect);
-                }
-                Event::Receive(original_address, packet) => {
+                SocketEvent::Packet(packet) => {
+                    println!("sending messages!");
                     for address in &client_addresses {
-                        server.client(address).unwrap().borrow_mut()
-                            .send(packet.clone(), 0, SendMode::Persistent)
+                        sender.send(Packet::reliable_unordered(*address, Vec::from(packet.payload()))).unwrap();
                     }
                 }
-                Event::Error(_, _) => {}
+                SocketEvent::Connect(connection) => {
+                    println!("connecteed!: {}", connection);
+                    client_addresses.push(connection);
+                }
+                SocketEvent::Timeout(_) => {}
+                SocketEvent::Disconnect(_) => {}
             }
-            server.flush();
         }
+        // for event in server.step() {
+        //     match event {
+        //         Event::Connect(connection) => {
+        //             println!("connected: {}", connection);
+        //             client_addresses.push(connection);
+        //         }
+        //         Event::Disconnect(dissconnect) => {
+        //             println!("disconnected: {}", dissconnect);
+        //         }
+        //         Event::Receive(original_address, packet) => {
+        //             for address in &client_addresses {
+        //                 server.client(address).unwrap().borrow_mut()
+        //                     .send(packet.clone(), 0, SendMode::Persistent)
+        //             }
+        //         }
+        //         Event::Error(_, _) => {}
+        //     }
+        //     server.flush();
+        // }
     }
     Ok(())
 }
