@@ -5,6 +5,7 @@ mod packet;
 mod server;
 mod client;
 mod avatar;
+mod things;
 
 use std::collections::{HashMap, HashSet};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -168,8 +169,8 @@ fn client(iteration: u32) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-
-    client::run_client(SERVER.parse()?,SERVER.parse()?)?;
+    things::run()?;
+    //client::run_client(SERVER.parse()?,SERVER.parse()?)?;
     return Ok(());
     let stdin = std::io::stdin();
 

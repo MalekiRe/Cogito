@@ -9,10 +9,13 @@ use glam::{Mat4, Vec3};
 use goth_gltf::Gltf;
 use simple_error::{SimpleError, SimpleResult};
 use stereokit::color_named::WHITE;
+use stereokit::material::{Cull, DEFAULT_ID_MATERIAL, Material};
+use stereokit::mesh::Mesh;
 use stereokit::model::{Model, NodeId};
 use stereokit::pose::Pose;
-use stereokit::render::RenderLayer;
+use stereokit::render::{Rect, RenderClear, RenderLayer, StereoKitRender};
 use stereokit::shader::Shader;
+use stereokit::texture::{Texture, TextureFormat, TextureType};
 use stereokit::values::MMatrix;
 use crate::bones::Skeleton;
 use crate::ik::{Ik, quat_from_angles};
@@ -77,7 +80,7 @@ impl VrmAvatar {
             Vec3::new(1.0, 1.0, 1.0),
             pose.orientation.into(),
             pose.position.into()).into();
-        self.model.draw(sk, matrix, WHITE, RenderLayer::Layer0);
+        self.model.draw(sk, matrix, WHITE, RenderLayer::Layer1);
     }
     pub fn _get_node(gltf: &VrmGltf, node: &str) -> SimpleResult<NodeId> {
         for b in &gltf.extensions.vrm.clone().unwrap().humanoid.human_bones {
@@ -132,8 +135,26 @@ pub fn main() {
     let shader = Shader::from_file(&sk, "malek.sks").unwrap();
     let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap();
 
+//    let mesh = Mesh::gen_cube(&sk, [0.3, 0.3, 0.3], 1).unwrap();
+//    let mut material = Material::create(&sk, &Shader::default(&sk)).unwrap();
+
+    //let texture = Texture::create(&sk, TextureType::RenderTarget, TextureFormat::No).unwrap();
+//    texture.set_size(512, 512);
+//    texture.add_zbuffer(TextureFormat::Depth16);
+    //material.set_texture(&sk, "diffuse", &texture).unwrap();
+    //material.set_cull(&sk, Cull::Front);
+    let model = Model::from_mesh(&sk, &mesh, &material).unwrap();
     sk.run(|sk| {
+        let pos = Mat4::from_scale_rotation_translation(Vec3::new(0.1, 0.1, 0.1), quat_from_angles(0.0, 90.0, 20.0), Vec3::new(1.0, 1.0, 1.0));
+        /*sk.render_to(&texture, pos, Mat4::orthographic_rh_gl(-1.0, 1.0, -1.0, 1.0, 0.01, 0.1), RenderLayer::all().difference(RenderLayer::Layer0), RenderClear::None, Rect{
+            x: 0.0,
+            y: 0.0,
+            w: 0.0,
+            h: 0.0,
+        });*/
+        //model.draw(sk, pos.into(), WHITE, RenderLayer::Layer0);
         avatar.draw(sk, &Pose::IDENTITY);
         avatar.update_ik(sk);
+        //model.draw(sk, Mat4::default().into(), WHITE, RenderLayer::Layer0);
     }, |_| {});
 }
