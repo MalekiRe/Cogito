@@ -34,7 +34,7 @@ pub fn server() -> Result<()> {
                             server.client(address).unwrap().borrow_mut().send(
                                 packet_data.clone(), num, uflow::SendMode::Reliable
                             );
-                            server.flush();
+                            //server.flush();
                         //}
                     }
                     // Echo the packet reliably on channel 0
@@ -48,7 +48,7 @@ pub fn server() -> Result<()> {
         }
 
         // Flush outbound UDP frames
-        server.flush();
+        //server.flush();
         std::thread::sleep(Duration::from_nanos(2));
         //std::thread::sleep(std::time::Duration::from_millis(1));
         //std::thread::sleep(std::time::Duration::from_millis(30));
