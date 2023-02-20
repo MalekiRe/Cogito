@@ -49,8 +49,8 @@ pub fn server() -> Result<()> {
 
         // Flush outbound UDP frames
         //server.flush();
-        std::thread::sleep(Duration::from_nanos(2));
-        //std::thread::sleep(std::time::Duration::from_millis(1));
+        //std::thread::sleep(Duration::from_nanos(2));
+        std::thread::sleep(std::time::Duration::from_millis(300));
         //std::thread::sleep(std::time::Duration::from_millis(30));
     }
     Ok(())
