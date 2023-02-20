@@ -38,11 +38,10 @@ pub fn client() -> Result<()> {
     let mut sample_counter = 0;
 
     let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
-
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
         sample_counter += 1;
-        if sample_counter >= 0 {
+        if sample_counter >= 2 {
              sample_counter = 0;
             let len = sound.unread_samples();
             //println!("len: {}", len);
@@ -50,11 +49,12 @@ pub fn client() -> Result<()> {
             //println!("{:#?}", samples_with_pos);
             sound.read_samples(samples_with_pos.samples.as_mut_slice());
             let bytes = bincode::serialize(&samples_with_pos).unwrap();
-            println!("len: {}", bytes.len());
+            //println!("len: {}", bytes.len());
             //println!("bytes: {:?}", bytes);
             //println!("sending bytes: {:#?}", bytes);
             client.send(bytes.into_boxed_slice(), client.remote_address().port() as usize % 8, SendMode::Unreliable);
         }
+        println!("{}", client.send_buffer_size());
         for event in client.step() {
             match event {
                 uflow::client::Event::Connect => {
@@ -73,7 +73,7 @@ pub fn client() -> Result<()> {
                     if sounds.contains_key(&samples_with_pos.client) {
                         let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
                         stream.write_samples(samples_with_pos.samples.as_slice());
-                        instance.set_position(samples_with_pos.pos);
+                        //instance.set_position(samples_with_pos.pos);
                     } else {
                         let sound_stream = SoundStream::create(20.0);
                         sound_stream.write_samples(samples_with_pos.samples.as_slice());

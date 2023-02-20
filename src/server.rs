@@ -13,6 +13,7 @@ pub fn server() -> Result<()> {
     loop {
         // Process inbound UDP frames and handle events
         for event in server.step() {
+            server.flush();
             match event {
                 uflow::server::Event::Connect(client_address) => {
                     println!("[{:?}] connected", client_address);
