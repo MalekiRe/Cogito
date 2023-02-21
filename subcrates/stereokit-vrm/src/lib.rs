@@ -28,13 +28,6 @@ pub struct VrmAvatar {
     skeleton: Skeleton,
     ik: Ik,
     gltf: VrmGltf,
-    number: u32,
-    n2: u32,
-    r1: f32,
-    r2: f32,
-    x: f32,
-    y: f32,
-    z: f32,
 }
 
 pub static mut VRM_SHADER: Option<Shader> = None;
@@ -62,13 +55,6 @@ impl VrmAvatar {
             skeleton,
             ik,
             gltf,
-            number: 0,
-            n2: 0,
-            r1: 0.0,
-            r2: 0.0,
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
         })
 
     }
@@ -97,8 +83,6 @@ impl VrmAvatar {
         self.model.node_set_transform_local(node, pose.as_matrix());
     }
     pub fn pose_node_model(&mut self, node: NodeId, pose: Pose) {
-        //let rotation: Mat4 = self.model.node_get_transform_model(node).into();
-        //let new_matrix = Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), rotation.to_scale_rotation_translation().1, pose.position.into());
         self.model.node_set_transform_model(node, pose.as_matrix());
     }
     pub fn transform_node_model(&mut self, node: NodeId, matrix: Mat4) {
@@ -132,7 +116,8 @@ mod test {
 
 pub fn main() {
     let sk: stereokit::StereoKit = stereokit::Settings::default().init().unwrap();
-    let shader = Shader::from_file(&sk, "malek.sks").unwrap();
+    //let shader = Shader::from_file(&sk, "malek.sks").unwrap();
+    let shader = Shader::default(&sk);
     let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap();
 
 //    let mesh = Mesh::gen_cube(&sk, [0.3, 0.3, 0.3], 1).unwrap();
@@ -143,7 +128,7 @@ pub fn main() {
 //    texture.add_zbuffer(TextureFormat::Depth16);
     //material.set_texture(&sk, "diffuse", &texture).unwrap();
     //material.set_cull(&sk, Cull::Front);
-    let model = Model::from_mesh(&sk, &mesh, &material).unwrap();
+    //let model = Model::from_mesh(&sk, &mesh, &material).unwrap();
     sk.run(|sk| {
         let pos = Mat4::from_scale_rotation_translation(Vec3::new(0.1, 0.1, 0.1), quat_from_angles(0.0, 90.0, 20.0), Vec3::new(1.0, 1.0, 1.0));
         /*sk.render_to(&texture, pos, Mat4::orthographic_rh_gl(-1.0, 1.0, -1.0, 1.0, 0.01, 0.1), RenderLayer::all().difference(RenderLayer::Layer0), RenderClear::None, Rect{
@@ -155,6 +140,7 @@ pub fn main() {
         //model.draw(sk, pos.into(), WHITE, RenderLayer::Layer0);
         avatar.draw(sk, &Pose::IDENTITY);
         avatar.update_ik(sk);
+        //println!("{:?}", avatar.get_nodes_and_poses());
         //model.draw(sk, Mat4::default().into(), WHITE, RenderLayer::Layer0);
     }, |_| {});
 }

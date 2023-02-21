@@ -96,6 +96,36 @@ impl VrmAvatar {
         self.pose_node_model(self.skeleton.torso.hips, Pose::new(Vec3::from(sk_head.position) - difference,  quat_from_angles(0.0, y, 0.0)));
     }
 
+
+    pub fn recursive_get_nodes_and_poses(&self, mut node: NodeId) -> Vec<(NodeId, Pose)> {
+        let mut vec = vec![];
+        vec.push((node, self.node_get_pose_model(node)));
+        match self.model.node_child(node) {
+            None => {}
+            Some(child) => {
+                vec.append(&mut self.recursive_get_nodes_and_poses(child));
+            }
+        }
+        match self.model.node_sibling(node) {
+            None => {}
+            Some(sibling) => {
+                vec.append(&mut self.recursive_get_nodes_and_poses(sibling));
+            }
+        }
+        vec
+    }
+    pub fn set_nodes_and_poses(&mut self, nodes_and_poses: Vec<(NodeId, Pose)>) {
+        for i in nodes_and_poses {
+            self.pose_node_model(i.0, i.1);
+        }
+    }
+    pub fn node_get_pose_model(&self, node_id: NodeId) -> Pose {
+        let (s, q, t) = Mat4::from(self.model.node_get_transform_model(node_id)).to_scale_rotation_translation();
+        Pose::new(t, q)
+    }
+    pub fn get_nodes_and_poses(&self) -> Vec<(NodeId, Pose)> {
+        self.recursive_get_nodes_and_poses(self.skeleton.torso.hips)
+    }
     pub fn hide_nodes(&self, mut node: NodeId) {
         //println!("hiding node: {:?}", node);
         self.model.node_set_visible(node, false);

@@ -1,4 +1,3 @@
-mod things;
 mod server;
 mod client;
 

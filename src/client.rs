@@ -15,17 +15,25 @@ use crate::SERVER;
 use color_eyre::Result;
 use crossbeam::channel::TryRecvError;
 use stereokit::lifecycle::DisplayMode::Flatscreen;
+use stereokit::model::NodeId;
+use stereokit::pose::Pose;
+use stereokit::shader::Shader;
 use stereokit::sound::{SoundInstance, SoundStream, SoundT};
+use stereokit_vrm::VrmAvatar;
 
 pub fn laminar_version() {
     let server_addr = "74.207.246.102:8888".parse().unwrap();
+    let avatar_server_addr = "74.207.246.102:8889".parse().unwrap();
     //let server_addr = "127.0.0.1:8888".parse().unwrap();
     //let mut socket = Socket::bind_any().unwrap();
     let r: u8 = rand::random();
     let mut socket = Socket::bind(format!("0.0.0.0:6{}", r).as_str()).unwrap();
+    let mut avatar_socket = Socket::bind(format!("0.0.0.0:7{}", r).as_str()).unwrap();
     let client_addr = socket.local_addr().unwrap();
+    let (mut avatar_rx, avatar_tx) = (avatar_socket.get_event_receiver(), avatar_socket.get_packet_sender());
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
+    let _t = thread::spawn(move || avatar_socket.start_polling_with_duration(None));
     let sk = stereokit::Settings::default().display_preference(Flatscreen).init().unwrap();
     let devices = Microphone::device_count();
     for i in 0..devices {
@@ -36,9 +44,31 @@ pub fn laminar_version() {
     let mut locomotion_tracker = LocomotionTracker::new(1.0, 1.0, 1.0);
     let sound = mic.get_stream().unwrap();
     let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
+    let mut avatars: HashMap<SocketAddr, stereokit_vrm::VrmAvatar> = HashMap::new();
     let mut sample_num = 0;
+    let mut this_model = stereokit_vrm::VrmAvatar::load_from_file(&sk, "Malek.vrm", &Shader::default(&sk)).unwrap();
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
+        //avatar stuff
+        {
+            this_model.update_ik(sk);
+            this_model.draw(sk, &Pose::IDENTITY);
+            let stuff_and_things = this_model.get_nodes_and_poses();
+            let bytes = bincode::serialize(&AvatarInfo::new(client_addr, stuff_and_things)).unwrap();
+            let packet = Packet::reliable_unordered(avatar_server_addr, bytes);
+            avatar_tx.send(packet).unwrap();
+            match avatar_rx.try_recv() {
+                Ok(SocketEvent::Packet(packet)) => {
+                    let avatar_info: AvatarInfo = bincode::deserialize(packet.payload()).unwrap();
+                    if !avatars.contains_key(&avatar_info.address) {
+                        avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap());
+                    }
+                    avatars.get_mut(&avatar_info.address)
+                        .unwrap().set_nodes_and_poses(avatar_info.nodes_and_poses);
+                }
+                _ => {}
+            }
+        }
         sample_num += 1;
         if sample_num > 3 {
             sample_num = 0;
@@ -69,6 +99,21 @@ pub fn laminar_version() {
             _ => {}
         }
     }, |_| {});
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct AvatarInfo {
+    nodes_and_poses: Vec<(NodeId, Pose)>,
+    address: SocketAddr,
+}
+
+impl AvatarInfo {
+    pub fn new(address: SocketAddr, nodes_and_poses: Vec<(NodeId, Pose)>) -> Self {
+        Self {
+            nodes_and_poses,
+            address,
+        }
+    }
 }
 
 pub fn client() -> Result<()> {

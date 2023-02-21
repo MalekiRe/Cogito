@@ -66,16 +66,36 @@ pub fn server() -> Result<()> {
 
 fn laminar_version() {
     let mut socket = Socket::bind("0.0.0.0:8888").unwrap();
+    let mut avatar_socket = Socket::bind("0.0.0.0:8889").unwrap();
+    let (mut avatar_rx, avatar_tx) = (avatar_socket.get_event_receiver(), avatar_socket.get_packet_sender());
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
-    let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
+    let _t = thread::spawn(move || socket.start_polling_with_duration(None));
+    let _t2 = thread::spawn(move || avatar_socket.start_polling_with_duration(None));
     let mut clients = HashSet::new();
+    let mut avatar_clients = HashSet::new();
     loop {
+        match avatar_rx.try_recv() {
+            Ok(SocketEvent::Packet(packet)) => {
+                avatar_clients.insert(packet.addr());
+                for addr in &clients {
+                    if addr == &packet.addr() {
+                        continue;
+                    }
+                    let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
+                    avatar_tx.send(to_send).unwrap();
+                }
+            }
+            _ => {}
+        }
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
                 //println!("recieved packet");
                 clients.insert(packet.addr());
                 for addr in &clients {
                     //println!("sending to: {}", addr);
+                    if addr == &packet.addr() {
+                        continue;
+                    }
                     let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
                     tx.send(to_send).unwrap();
                 }
