@@ -67,21 +67,21 @@ pub fn server() -> Result<()> {
 fn laminar_version() {
     let mut socket = Socket::bind("0.0.0.0:8888").unwrap();
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
-    let _t = thread::spawn(move || socket.start_polling());
+    let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
     let mut clients = HashSet::new();
     loop {
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
-                println!("recieved packet");
+                //println!("recieved packet");
                 clients.insert(packet.addr());
                 for addr in &clients {
-                    println!("sending to: {}", addr);
+                    //println!("sending to: {}", addr);
                     let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
                     tx.send(to_send).unwrap();
                 }
             }
             Ok(SocketEvent::Connect(addr)) => {
-                println!("connected: {}", addr);
+                //println!("connected: {}", addr);
             }
             _ => {}
         }

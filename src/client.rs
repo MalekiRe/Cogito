@@ -14,15 +14,18 @@ use uflow::SendMode;
 use crate::SERVER;
 use color_eyre::Result;
 use crossbeam::channel::TryRecvError;
+use stereokit::lifecycle::DisplayMode::Flatscreen;
 use stereokit::sound::{SoundInstance, SoundStream, SoundT};
 
 pub fn laminar_version() {
     let server_addr = "74.207.246.102:8888".parse().unwrap();
-    let mut socket = Socket::bind("0.0.0.0:8008").unwrap();
+    //let server_addr = "127.0.0.1:8888".parse().unwrap();
+    let mut socket = Socket::bind_any().unwrap();
+    //let mut socket = Socket::bind("0.0.0.0:8008").unwrap();
     let client_addr = socket.local_addr().unwrap();
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
-    let _t = thread::spawn(move || socket.start_polling());
-    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).init().unwrap();
+    let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
+    let sk = stereokit::Settings::default().display_preference(Flatscreen).init().unwrap();
     let devices = Microphone::device_count();
     for i in 0..devices {
         println!("{}, {}", Microphone::device_name(i), i);
@@ -32,17 +35,23 @@ pub fn laminar_version() {
     let mut locomotion_tracker = LocomotionTracker::new(1.0, 1.0, 1.0);
     let sound = mic.get_stream().unwrap();
     let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
+    let mut sample_num = 0;
     sk.run(|sk| {
-        let len = sound.unread_samples();
-        //println!("len: {}", len);
-        let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client_addr, len);
-        //println!("{:#?}", samples_with_pos);
-        sound.read_samples(samples_with_pos.samples.as_mut_slice());
-        let bytes = bincode::serialize(&samples_with_pos).unwrap();
-        let packet = Packet::reliable_unordered(server_addr, bytes);
+        sample_num += 1;
+        if sample_num > 3 {
+            sample_num = 0;
+            let len = sound.unread_samples();
+            //println!("len: {}", len);
+            let mut samples_with_pos = SamplesWithPos::new(sk.input_head().position.into(), client_addr, len);
+            //println!("{:#?}", samples_with_pos);
+            sound.read_samples(samples_with_pos.samples.as_mut_slice());
+            let bytes = bincode::serialize(&samples_with_pos).unwrap();
+            let packet = Packet::reliable_unordered(server_addr, bytes);
+            tx.send(packet).unwrap();
+        }
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
-                println!("recieved packet");
+                //println!("recieved packet");
                 let samples_with_pos: SamplesWithPos = bincode::deserialize(packet.payload()).unwrap();
                 if sounds.contains_key(&samples_with_pos.client) {
                     let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
@@ -57,7 +66,6 @@ pub fn laminar_version() {
             }
             _ => {}
         }
-        tx.send(packet).unwrap();
     }, |_| {});
 }
 
