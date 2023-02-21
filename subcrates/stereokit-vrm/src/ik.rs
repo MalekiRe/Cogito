@@ -124,7 +124,11 @@ impl VrmAvatar {
         Pose::new(t, q)
     }
     pub fn get_nodes_and_poses(&self) -> Vec<(NodeId, Pose)> {
-        self.recursive_get_nodes_and_poses(self.skeleton.torso.hips)
+        let mut vector = vec![
+            (self.skeleton.torso.hips, self.node_get_pose_model(self.skeleton.torso.hips)),
+                (self.skeleton.head.head, self.node_get_pose_model(self.skeleton.head.head))];
+        vector.append(&mut self.recursive_get_nodes_and_poses(self.skeleton.right_arm.hand));
+        vector
     }
     pub fn hide_nodes(&self, mut node: NodeId) {
         //println!("hiding node: {:?}", node);

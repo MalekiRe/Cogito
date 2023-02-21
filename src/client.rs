@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::stdin;
 use std::net::SocketAddr;
+use std::str::FromStr;
 use std::thread;
 use std::time::{Duration, Instant};
 use glam::Vec3;
@@ -34,7 +35,7 @@ pub fn laminar_version() {
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
     let _t = thread::spawn(move || avatar_socket.start_polling_with_duration(None));
-    let sk = stereokit::Settings::default().display_preference(Flatscreen).init().unwrap();
+    let sk = stereokit::Settings::default().init().unwrap();
     let devices = Microphone::device_count();
     for i in 0..devices {
         println!("{}, {}", Microphone::device_name(i), i);
@@ -48,6 +49,8 @@ pub fn laminar_version() {
     let mut sample_num = 0;
     let mut avatar_update_number = 0;
     let mut this_model = stereokit_vrm::VrmAvatar::load_from_file(&sk, "Malek.vrm", &Shader::default(&sk)).unwrap();
+    let shader = Shader::default(&sk);
+    //avatars.insert(SocketAddr::from_str("111.111.111.111:5555").unwrap(), VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap());
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
         //avatar stuff
@@ -57,9 +60,9 @@ pub fn laminar_version() {
             for (_, other_avatar) in &avatars {
                 other_avatar.draw(sk, &Pose::IDENTITY);
             }
-            println!("num avatars: {}", avatars.len());
+            //println!("num avatars: {}", avatars.len());
             avatar_update_number += 1;
-            if avatar_update_number > 50 {
+            if avatar_update_number > 4 {
                 avatar_update_number = 0;
                 let stuff_and_things = this_model.get_nodes_and_poses();
                 let bytes = bincode::serialize(&AvatarInfo::new(client_addr, stuff_and_things)).unwrap();
@@ -69,7 +72,7 @@ pub fn laminar_version() {
                     Ok(SocketEvent::Packet(packet)) => {
                         let avatar_info: AvatarInfo = bincode::deserialize(packet.payload()).unwrap();
                         if !avatars.contains_key(&avatar_info.address) {
-                            avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap());
+                            avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &shader).unwrap());
                         }
                         avatars.get_mut(&avatar_info.address)
                             .unwrap().set_nodes_and_poses(avatar_info.nodes_and_poses);

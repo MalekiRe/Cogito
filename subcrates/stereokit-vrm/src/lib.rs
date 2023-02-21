@@ -39,7 +39,7 @@ impl VrmAvatar {
         }
     }
     pub fn load_from_file(sk: &impl StereoKitContext, file: impl AsRef<Path>, shader: &Shader) -> Result<Self> {
-        let model = Model::from_file(sk, file.as_ref(), Some(shader))?;
+        let model = Model::from_file(sk, file.as_ref(), Some(shader))?.clone();
         let bytes = std::fs::read(&file).unwrap();
         let (gltf, b): (
             goth_gltf::Gltf<goth_gltf::default_extensions::Extensions>,
@@ -66,7 +66,7 @@ impl VrmAvatar {
             Vec3::new(1.0, 1.0, 1.0),
             pose.orientation.into(),
             pose.position.into()).into();
-        self.model.draw(sk, matrix, WHITE, RenderLayer::Layer1);
+        self.model.draw(sk, matrix, WHITE, RenderLayer::LayerAll);
     }
     pub fn _get_node(gltf: &VrmGltf, node: &str) -> SimpleResult<NodeId> {
         for b in &gltf.extensions.vrm.clone().unwrap().humanoid.human_bones {
