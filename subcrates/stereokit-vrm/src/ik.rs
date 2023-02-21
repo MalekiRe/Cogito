@@ -123,10 +123,10 @@ impl VrmAvatar {
         let (s, q, t) = Mat4::from(self.model.node_get_transform_model(node_id)).to_scale_rotation_translation();
         Pose::new(t, q)
     }
-    pub fn get_nodes_and_poses(&self) -> Vec<(NodeId, Pose)> {
+    pub fn get_nodes_and_poses(&self, sk: &StereoKitDraw) -> Vec<(NodeId, Pose)> {
         let mut vector = vec![
             (self.skeleton.torso.hips, self.node_get_pose_model(self.skeleton.torso.hips)),
-                (self.skeleton.head.head, self.node_get_pose_model(self.skeleton.head.head))];
+                (self.skeleton.head.head, sk.input_head())];
         vector.append(&mut self.recursive_get_nodes_and_poses(self.skeleton.right_arm.hand));
         vector
     }

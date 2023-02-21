@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use std::thread;
 use std::time::{Duration, Instant};
-use glam::Vec3;
+use glam::{Mat4, Vec3};
 use laminar::{ErrorKind, Packet, Socket, SocketEvent};
 use stereokit::input::StereoKitInput;
 use stereokit::lifecycle::{DisplayMode, StereoKitContext};
@@ -28,13 +28,15 @@ pub fn laminar_version() {
     //let server_addr = "127.0.0.1:8888".parse().unwrap();
     //let mut socket = Socket::bind_any().unwrap();
     let r: u8 = rand::random();
-    let mut socket = Socket::bind(format!("0.0.0.0:6{}", r).as_str()).unwrap();
-    let mut avatar_socket = Socket::bind(format!("0.0.0.0:7{}", r).as_str()).unwrap();
+    let mut socket = Socket::bind("0.0.0.0:1233").unwrap();
+    let mut avatar_socket = Socket::bind("0.0.0.0:1234").unwrap();
+    //let mut socket = Socket::bind(format!("0.0.0.0:6{}", r).as_str()).unwrap();
+    //let mut avatar_socket = Socket::bind(format!("0.0.0.0:7{}", r).as_str()).unwrap();
     let client_addr = socket.local_addr().unwrap();
     let (mut avatar_rx, avatar_tx) = (avatar_socket.get_event_receiver(), avatar_socket.get_packet_sender());
     let (mut rx, tx) = (socket.get_event_receiver(), socket.get_packet_sender());
     let _t = thread::spawn(move ||  socket.start_polling_with_duration(None));
-    let _t = thread::spawn(move || avatar_socket.start_polling_with_duration(None));
+    let _t = thread::spawn(move || avatar_socket.start_polling_with_duration(Some(Duration::from_millis(1))));
     let sk = stereokit::Settings::default().init().unwrap();
     let devices = Microphone::device_count();
     for i in 0..devices {
@@ -57,6 +59,10 @@ pub fn laminar_version() {
         {
             this_model.update_ik(sk);
             this_model.draw(sk, &Pose::IDENTITY);
+            for (_, other_avatar) in &mut avatars {
+                //let pose = other_avatar.node_get_pose_model(other_avatar.skeleton.head.head);
+                //other_avatar.transform_node_model(other_avatar.skeleton.head.head, Mat4::from_scale_rotation_translation(Vec3::new(1.0, 1.0, 1.0), pose.orientation.into(), pose.position.into()).into());
+            }
             for (_, other_avatar) in &avatars {
                 other_avatar.draw(sk, &Pose::IDENTITY);
             }
@@ -64,7 +70,7 @@ pub fn laminar_version() {
             avatar_update_number += 1;
             if avatar_update_number > 4 {
                 avatar_update_number = 0;
-                let stuff_and_things = this_model.get_nodes_and_poses();
+                let stuff_and_things = this_model.get_nodes_and_poses(sk);
                 let bytes = bincode::serialize(&AvatarInfo::new(client_addr, stuff_and_things)).unwrap();
                 let packet = Packet::reliable_unordered(avatar_server_addr, bytes);
                 avatar_tx.send(packet).unwrap();

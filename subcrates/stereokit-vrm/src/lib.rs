@@ -25,7 +25,7 @@ pub type VrmGltf = Gltf<goth_gltf::default_extensions::Extensions>;
 
 pub struct VrmAvatar {
     model: Model,
-    skeleton: Skeleton,
+    pub skeleton: Skeleton,
     ik: Ik,
     gltf: VrmGltf,
 }
