@@ -46,6 +46,7 @@ pub fn laminar_version() {
     let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
     let mut avatars: HashMap<SocketAddr, stereokit_vrm::VrmAvatar> = HashMap::new();
     let mut sample_num = 0;
+    let mut avatar_update_number = 0;
     let mut this_model = stereokit_vrm::VrmAvatar::load_from_file(&sk, "Malek.vrm", &Shader::default(&sk)).unwrap();
     sk.run(|sk| {
         locomotion_tracker.locomotion_update(sk);
@@ -53,21 +54,28 @@ pub fn laminar_version() {
         {
             this_model.update_ik(sk);
             this_model.draw(sk, &Pose::IDENTITY);
-            let stuff_and_things = this_model.get_nodes_and_poses();
-            let bytes = bincode::serialize(&AvatarInfo::new(client_addr, stuff_and_things)).unwrap();
-            let packet = Packet::reliable_unordered(avatar_server_addr, bytes);
-            avatar_tx.send(packet).unwrap();
-            match avatar_rx.try_recv() {
-                Ok(SocketEvent::Packet(packet)) => {
-                    let avatar_info: AvatarInfo = bincode::deserialize(packet.payload()).unwrap();
-                    println!("got avatar thing");
-                    if !avatars.contains_key(&avatar_info.address) {
-                        avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap());
+            for (_, other_avatar) in &avatars {
+                other_avatar.draw(sk, &Pose::IDENTITY);
+            }
+            println!("num avatars: {}", avatars.len());
+            avatar_update_number += 1;
+            if avatar_update_number > 50 {
+                avatar_update_number = 0;
+                let stuff_and_things = this_model.get_nodes_and_poses();
+                let bytes = bincode::serialize(&AvatarInfo::new(client_addr, stuff_and_things)).unwrap();
+                let packet = Packet::reliable_unordered(avatar_server_addr, bytes);
+                avatar_tx.send(packet).unwrap();
+                match avatar_rx.try_recv() {
+                    Ok(SocketEvent::Packet(packet)) => {
+                        let avatar_info: AvatarInfo = bincode::deserialize(packet.payload()).unwrap();
+                        if !avatars.contains_key(&avatar_info.address) {
+                            avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap());
+                        }
+                        avatars.get_mut(&avatar_info.address)
+                            .unwrap().set_nodes_and_poses(avatar_info.nodes_and_poses);
                     }
-                    avatars.get_mut(&avatar_info.address)
-                        .unwrap().set_nodes_and_poses(avatar_info.nodes_and_poses);
+                    _ => {}
                 }
-                _ => {}
             }
         }
         sample_num += 1;
@@ -85,16 +93,17 @@ pub fn laminar_version() {
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
                 //println!("recieved packet");
-                let samples_with_pos: SamplesWithPos = bincode::deserialize(packet.payload()).unwrap();
-                if sounds.contains_key(&samples_with_pos.client) {
-                    let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
-                    stream.write_samples(samples_with_pos.samples.as_slice());
-                    instance.set_position(samples_with_pos.pos);
-                } else {
-                    let sound_stream = SoundStream::create(20.0);
-                    sound_stream.write_samples(samples_with_pos.samples.as_slice());
-                    let instance = sound_stream.play_sound(samples_with_pos.pos, 2.0);
-                    sounds.insert(samples_with_pos.client, (sound_stream, instance));
+                if let Ok(samples_with_pos) = bincode::deserialize::<SamplesWithPos>(packet.payload()) {
+                    if sounds.contains_key(&samples_with_pos.client) {
+                        let (stream, instance) = sounds.get(&samples_with_pos.client).unwrap();
+                        stream.write_samples(samples_with_pos.samples.as_slice());
+                        instance.set_position(samples_with_pos.pos);
+                    } else {
+                        let sound_stream = SoundStream::create(20.0);
+                        sound_stream.write_samples(samples_with_pos.samples.as_slice());
+                        let instance = sound_stream.play_sound(samples_with_pos.pos, 2.0);
+                        sounds.insert(samples_with_pos.client, (sound_stream, instance));
+                    }
                 }
             }
             _ => {}

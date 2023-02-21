@@ -73,21 +73,25 @@ fn laminar_version() {
     let _t2 = thread::spawn(move || avatar_socket.start_polling_with_duration(None));
     let mut clients = HashSet::new();
     let mut avatar_clients = HashSet::new();
-    loop {
-        match avatar_rx.try_recv() {
-            Ok(SocketEvent::Packet(packet)) => {
-                //println!("recieved avaatar packet");
-                avatar_clients.insert(packet.addr());
-                for addr in &avatar_clients {
-                    if addr == &packet.addr() {
-                        continue;
+    let loop_2 = thread::spawn(move || {
+        loop {
+            match avatar_rx.try_recv() {
+                Ok(SocketEvent::Packet(packet)) => {
+                    //println!("recieved avaatar packet");
+                    avatar_clients.insert(packet.addr());
+                    for addr in &avatar_clients {
+                        if addr == &packet.addr() {
+                            continue;
+                        }
+                        let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
+                        avatar_tx.send(to_send).unwrap();
                     }
-                    let to_send = Packet::reliable_unordered(*addr, packet.payload().to_vec());
-                    avatar_tx.send(to_send).unwrap();
                 }
+                _ => {}
             }
-            _ => {}
         }
+    });
+    loop {
         match rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
                 //println!("recieved packet");
