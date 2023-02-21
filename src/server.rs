@@ -76,6 +76,7 @@ fn laminar_version() {
     loop {
         match avatar_rx.try_recv() {
             Ok(SocketEvent::Packet(packet)) => {
+                println!("recieved avaatar packet");
                 avatar_clients.insert(packet.addr());
                 for addr in &clients {
                     if addr == &packet.addr() {

@@ -60,6 +60,7 @@ pub fn laminar_version() {
             match avatar_rx.try_recv() {
                 Ok(SocketEvent::Packet(packet)) => {
                     let avatar_info: AvatarInfo = bincode::deserialize(packet.payload()).unwrap();
+                    println!("got avatar thing");
                     if !avatars.contains_key(&avatar_info.address) {
                         avatars.insert(avatar_info.address, VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap());
                     }
