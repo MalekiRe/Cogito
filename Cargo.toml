@@ -7,7 +7,9 @@ edition = "2021"
 
 [workspace]
 members = [
-"subcrates/stereokit-vrm", "subcrates/stereokit-locomotion"
+"subcrates/stereokit-vrm", "subcrates/stereokit-locomotion",
+    "cloudcafe-client",
+    "cloudcafe-server"
 ]
 
 [dependencies]
