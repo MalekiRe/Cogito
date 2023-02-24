@@ -101,15 +101,10 @@ mod test {
     use stereokit::Settings;
     use stereokit::input::{Handed, StereoKitInput};
     use crate::VrmAvatar;
-
+    use crate::main;
     #[test]
     pub fn run() -> Result<()> {
-        let sk: StereoKit = Settings::default().init()?;
-        let mut avatar = VrmAvatar::load_from_file(&sk, "../../Malek.vrm")?;
-        sk.run(|sk| {
-            avatar.draw(sk, &Pose::IDENTITY);
-            avatar.update_ik(sk);
-        }, |_| {});
+        main();
         Ok(())
     }
 }
@@ -118,7 +113,7 @@ pub fn main() {
     let sk: stereokit::StereoKit = stereokit::Settings::default().init().unwrap();
     //let shader = Shader::from_file(&sk, "malek.sks").unwrap();
     let shader = Shader::default(&sk);
-    let mut avatar = VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap();
+    let mut avatar = VrmAvatar::load_from_file(&sk, "../../Malek.vrm", &shader).unwrap();
 
 //    let mesh = Mesh::gen_cube(&sk, [0.3, 0.3, 0.3], 1).unwrap();
 //    let mut material = Material::create(&sk, &Shader::default(&sk)).unwrap();

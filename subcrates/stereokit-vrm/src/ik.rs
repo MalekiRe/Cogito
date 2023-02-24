@@ -1,6 +1,6 @@
-use std::ops::{Div, Neg};
+use std::ops::{Div, Neg, Sub};
 use color_eyre::owo_colors::OwoColorize;
-use glam::{EulerRot, Mat4, Quat, Vec3};
+use glam::{EulerRot, Mat4, Quat, quat, Vec3};
 use glam::EulerRot::XYZ;
 use goth_gltf::extensions::CompressionFilter::Quaternion;
 use goth_gltf::{Gltf, Node};
@@ -21,6 +21,7 @@ impl VrmAvatar {
 
         //sk.input_hand_visible(Handed::Right, false);
         self.do_other_ik(sk);
+        self.left_hand(sk);
         let right_hand = sk.input_hand(Handed::Right);
 
 
@@ -73,6 +74,79 @@ impl VrmAvatar {
         self.cats_meow(self.skeleton.right_finger.thumb.intermediate, right_hand.fingers[0][2], right_hand_xr_correction_thumb);
         self.cats_meow(self.skeleton.right_finger.thumb.distal, right_hand.fingers[0][3], right_hand_xr_correction_thumb);
 
+
+        let hand_size = Mat4::from_quat(Quat::from(right_hand.wrist.orientation)).transform_point3(Vec3::new(0.0, 0.0, -right_hand.size * 2.0));
+
+        let lower_arm_pose = Pose::new(Vec3::from(hand_pose.position).sub(hand_size).lerp(Vec3::from(sk.input_head().position), 0.25), Quat::from(hand_pose.orientation).lerp(Quat::from(self.ik.lower_right_arm.orientation), 0.25));
+
+        self.mrow(self.skeleton.right_arm.lower_arm, lower_arm_pose, quat_from_angles(180.0, 0.0, 0.0));
+
+    }
+
+    pub fn left_hand(&mut self, sk: &StereoKitDraw) {
+        let left_hand = sk.input_hand(Handed::Left);
+
+
+
+
+        let left_hand_xr_correction: Quat = quat_from_angles(0.0f32, 90.0f32, 0.0f32).neg();
+        // let right_hand_xr_correction: Quat = Quat::IDENTITY;
+
+        // Don't ever do two euler rotations! More than one is bad luck and hard to think about! Multiply one single-axis rotation by another!
+
+
+        // I'm having a bit of trouble understanding why the first rotation needed to be z -90.
+        // But basically the three phenomena are
+        // * The way every bone is wrong (this one is odd - it's a rotation about the Y axis! I'd expect it to be about the X axis, if it's going from Blender to OpenXR. This might be a byproduct of VRM being weird.) Corresponds to right_hand_xr_correction.
+        // * The fact that wrist bones don't connect in VRM and instead point directly to the side. Corresponds to fix_thumb_not_connect
+        // * The fact that the thumb bones have the wrong "twist" and have their X axis point straight forward. Corresponds to fix_thumb_x_axis_wrong_direction
+        let fix_thumb_not_connect =quat_from_angles(-0.0f32, -40.0f32, 0.0f32);
+        let fix_thumb_x_axis_wrong_direction = quat_from_angles(-0.0f32, -0.0f32, -90.0f32);
+
+        let left_hand_xr_correction_thumb: Quat = fix_thumb_x_axis_wrong_direction * left_hand_xr_correction * fix_thumb_not_connect;
+        // let right_hand_xr_correction_thumb: Quat = Quat::IDENTITY;
+
+
+        let mut hand_pose = left_hand.wrist;
+        let mut hand_orientation: Quat = hand_pose.orientation.into();
+
+        hand_pose.orientation = (hand_orientation * left_hand_xr_correction).into();
+
+        self.pose_node_model(self.skeleton.left_arm.hand, hand_pose);
+
+        self.cats_meow(self.skeleton.left_finger.index.proximal, left_hand.fingers[1][1], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.index.intermediate, left_hand.fingers[1][2], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.index.distal, left_hand.fingers[1][3], left_hand_xr_correction);
+
+        self.cats_meow(self.skeleton.left_finger.middle.proximal, left_hand.fingers[2][1], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.middle.intermediate, left_hand.fingers[2][2], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.middle.distal, left_hand.fingers[2][3], left_hand_xr_correction);
+
+        self.cats_meow(self.skeleton.left_finger.ring.proximal, left_hand.fingers[3][1], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.ring.intermediate, left_hand.fingers[3][2], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.ring.distal, left_hand.fingers[3][3], left_hand_xr_correction);
+
+        self.cats_meow(self.skeleton.left_finger.little.proximal, left_hand.fingers[4][1], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.little.intermediate, left_hand.fingers[4][2], left_hand_xr_correction);
+        self.cats_meow(self.skeleton.left_finger.little.distal, left_hand.fingers[4][3], left_hand_xr_correction);
+
+
+
+        self.cats_meow(self.skeleton.left_finger.thumb.proximal, left_hand.fingers[0][1], left_hand_xr_correction_thumb);
+        self.cats_meow(self.skeleton.left_finger.thumb.intermediate, left_hand.fingers[0][2], left_hand_xr_correction_thumb);
+        self.cats_meow(self.skeleton.left_finger.thumb.distal, left_hand.fingers[0][3], left_hand_xr_correction_thumb);
+
+
+        let hand_size = Mat4::from_quat(Quat::from(left_hand.wrist.orientation)).transform_point3(Vec3::new(0.0, 0.0, -left_hand.size * 2.0));
+
+        let lower_arm_pose = Pose::new(Vec3::from(hand_pose.position).sub(hand_size).lerp(Vec3::from(sk.input_head().position), 0.25), Quat::from(hand_pose.orientation).lerp(Quat::from(self.ik.lower_left_arm.orientation), 0.25));
+
+        self.mrow(self.skeleton.left_arm.lower_arm, lower_arm_pose, quat_from_angles(180.0, 0.0, 0.0));
+        //self.pose_node_model(self.skeleton.left_arm.lower_arm, lower_arm_pose);
+    }
+
+    pub fn mrow(&mut self, node: NodeId, pose: Pose, correction_quat: Quat) {
+        self.pose_node_model(node, Pose::new(pose.position, Quat::from(pose.orientation) * correction_quat));
     }
 
     pub fn cats_meow(&mut self, node: NodeId, joint: Joint, correction_quat: Quat) {
@@ -93,7 +167,9 @@ impl VrmAvatar {
         self.model.node_set_transform_model(head, Mat4::from_scale_rotation_translation(Vec3::default(), sk_head.orientation.into(), sk_head.position.into()).into());
         let difference = self.ik.head - self.ik.hip;
         let (x, y, z) = angles_from_quat(sk_head.orientation.into());
+        //let difference = difference + Vec3::new(0.0, 0.0, x / 180.0);
         self.pose_node_model(self.skeleton.torso.hips, Pose::new(Vec3::from(sk_head.position) - difference,  quat_from_angles(0.0, y, 0.0)));
+        self.pose_node_model(self.skeleton.torso.chest, Pose::new(self.node_get_pose_model(self.skeleton.torso.chest).position, quat_from_angles(0.0, 0.0, 0.0)))
     }
 
 
@@ -164,6 +240,8 @@ pub struct Ik {
     head_root_offset: Vec3,
     head: Vec3,
     hip: Vec3,
+    lower_left_arm: Pose,
+    lower_right_arm: Pose,
 }
 impl Ik {
     pub fn new(gltf: &VrmGltf, model: &Model, skeleton: &Skeleton) -> Self {
@@ -173,11 +251,17 @@ impl Ik {
         let head_root_offset = Vec3::new(head_root_offset.x, head_root_offset.y, head_root_offset.z);
         let head = Mat4::from(model.node_get_transform_model(skeleton.head.head)).to_scale_rotation_translation().2;
         let hip = Mat4::from(model.node_get_transform_model(skeleton.torso.hips)).to_scale_rotation_translation().2;
+        let lower_left_arm = Mat4::from(model.node_get_transform_model(skeleton.left_arm.lower_arm)).to_scale_rotation_translation();
+        let lower_left_arm = Pose::new(lower_left_arm.2, lower_left_arm.1);
+        let lower_right_arm = Mat4::from(model.node_get_transform_model(skeleton.right_arm.lower_arm)).to_scale_rotation_translation();
+        let lower_right_arm = Pose::new(lower_right_arm.2, lower_right_arm.1);
         Self {
             avatar_hand_size: Default::default(),
             head_root_offset,
             head,
             hip,
+            lower_left_arm,
+            lower_right_arm,
         }
     }
 }

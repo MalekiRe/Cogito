@@ -1,5 +1,7 @@
 mod server;
 mod client;
+pub mod ports;
+pub mod packet;
 
 use std::io::{stdin};
 use std::thread;

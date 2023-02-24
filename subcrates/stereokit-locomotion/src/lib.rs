@@ -9,6 +9,8 @@ use stereokit::pose::Pose;
 use stereokit::render::Camera;
 use stereokit::values::{MQuat, MVec3};
 
+#[cfg(feature = "physics")]
+use stereokit::physics::Solid;
 
 #[cfg(test)]
 mod test {
@@ -49,6 +51,8 @@ pub struct LocomotionTracker {
     pub rotation_speed_multiplier: f32,
     pub position_speed_multiplier: f32,
     pub controller_rotation: f32,
+    #[cfg(feature = "physics")]
+    pub solid: Option<Solid>,
 }
 impl LocomotionTracker {
     pub fn new(rotation_sensitivity: f32, rotation_speed_multiplier: f32, position_speed_multiplier: f32) -> Self {
@@ -60,22 +64,97 @@ impl LocomotionTracker {
             rotation_speed_multiplier,
             position_speed_multiplier,
             controller_rotation: 0.0,
+            #[cfg(feature="physics")]
+            solid: None,
+        }
+    }
+    #[cfg(feature="physics")]
+    pub fn new_physics(rotation_sensitivity: f32, rotation_speed_multiplier: f32, position_speed_multiplier: f32, solid: Solid) -> Self {
+        Self {
+            stage_pose: Pose::IDENTITY,
+            flying_enabled: false,
+            toggle: 1.0,
+            rotation_sensitivity,
+            rotation_speed_multiplier,
+            position_speed_multiplier,
+            controller_rotation: 0.0,
+            #[cfg(feature="physics")]
+            solid: Some(solid),
         }
     }
 }
 impl LocomotionTracker {
+    fn get_pose(&self, sk: &impl StereoKitContext) -> Pose {
+        #[cfg(feature = "physics")]
+        {
+            match &self.solid {
+                None => {
+                    self.stage_pose
+                }
+                Some(solid) => {
+                    solid.get_pose(sk)
+                }
+            }
+        }
+        #[cfg(not(feature = "physics"))]
+        self.stage_pose
+    }
+    fn set_pose(&mut self, sk: &impl StereoKitContext, pose: Pose) {
+        #[cfg(feature = "physics")]
+        {
+            match &mut self.solid {
+                None => {
+                    self.stage_pose = pose;
+                }
+                Some(solid) => {
+                    solid.teleport_to(pose);
+                }
+            }
+        };
+        #[cfg(not(feature = "physics"))]
+        {
+            self.stage_pose = pose;
+        }
+    }
+    fn move_to_pose(&mut self, sk: &impl StereoKitContext, pose: Pose) {
+        #[cfg(feature = "physics")]
+        {
+            match &mut self.solid {
+                None => {
+                    self.stage_pose = pose;
+                }
+                Some(solid) => {
+                    solid.move_to(pose);
+                }
+            }
+        };
+        #[cfg(not(feature = "physics"))]
+        {
+            self.stage_pose = pose;
+        };
+    }
     pub fn rotate_player(&mut self, sk: &impl StereoKitContext, angle: impl Into<MQuat>) {
         let angle = angle.into();
+        let mut temp_pose = self.get_pose(sk);
         hierarchy(Mat4::from_translation(sk.input_head().position.into()).into(), |h| {
-            self.stage_pose = h.to_local_pose(self.stage_pose);
+            temp_pose = h.to_local_pose(temp_pose);
             hierarchy(Mat4::from_quat(angle.into()).into(), |h| {
-                self.stage_pose = h.to_world_pose(self.stage_pose);
+                temp_pose = h.to_world_pose(temp_pose);
             });
         });
+        self.set_pose(sk, temp_pose);
         self.sync_camera_stage_pose(sk);
     }
-    pub fn sync_camera_stage_pose(&self, sk: &impl StereoKitContext) {
-        Camera::set_root(sk, self.stage_pose.as_matrix());
+    pub fn sync_camera_stage_pose(&mut self, sk: &impl StereoKitContext) {
+        let mut pose = self.get_pose(sk);
+        if pose.position.y > 0.8 {
+            pose.position.y -= 0.05;
+        }
+        if pose.position.y < 0.5 {
+            pose.position.y += 0.05;
+        }
+        self.set_pose(sk, Pose::new(Vec3::new(pose.position.x, pose.position.y, pose.position.z), pose.orientation));
+        Camera::set_root(sk, pose.as_matrix());
     }
     pub fn set_player_position(&mut self, sk: &impl StereoKitContext, new_position: impl Into<MVec3>) {
         let new_position = Vec3::from(new_position.into());
@@ -90,7 +169,7 @@ impl LocomotionTracker {
         }
         let speed = self.position_speed_multiplier * sk.time_elapsedf() * 180.0;
         locomotion_direction *= Vec3::new(speed, speed, speed);
-        self.stage_pose.position = MVec3::from(Vec3::from(self.stage_pose.position) + locomotion_direction);
+        self.move_to_pose(sk, Pose::new(MVec3::from(Vec3::from(self.get_pose(sk).position) + locomotion_direction), self.get_pose(sk).orientation));
         self.sync_camera_stage_pose(sk);
     }
     pub fn analogue_controls(&mut self, sk: &impl StereoKitContext) {
@@ -107,6 +186,7 @@ impl LocomotionTracker {
             self.move_player_position(sk, locomotion_direction);
         }
         self.controller_rotation = sk.input_controller(Handed::Right).stick.x;
+        self.sync_camera_stage_pose(sk);
     }
 }
 pub fn quat_from_angles(x: f32, y: f32, z: f32) -> Quat {

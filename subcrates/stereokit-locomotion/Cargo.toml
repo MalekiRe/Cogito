@@ -9,7 +9,8 @@ keywords = ["stereokit", "XR", "VR", "AR"]
 categories = ["game-development"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-
+[features]
+physics = ["stereokit/physics"]
 
 [dependencies]
 stereokit = { path = "../../../stereokit-rs", features = []}

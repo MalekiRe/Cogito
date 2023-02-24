@@ -54,7 +54,7 @@ pub fn laminar_version() {
     let shader = Shader::default(&sk);
     //avatars.insert(SocketAddr::from_str("111.111.111.111:5555").unwrap(), VrmAvatar::load_from_file(&sk, "Malek.vrm", &shader).unwrap());
     sk.run(|sk| {
-        locomotion_tracker.locomotion_update(sk);
+        // locomotion_tracker.locomotion_update(sk);
         //avatar stuff
         {
             this_model.update_ik(sk);
@@ -162,7 +162,8 @@ pub fn client() -> Result<()> {
 
     let mut sounds: HashMap<SocketAddr, (SoundStream, SoundInstance)> = HashMap::new();
     sk.run(|sk| {
-        locomotion_tracker.locomotion_update(sk);
+        //hamster30!
+        // locomotion_tracker.locomotion_update(sk);
         sample_counter += 1;
         if sample_counter >= 2 {
              sample_counter = 0;
