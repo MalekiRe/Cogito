@@ -115,9 +115,9 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.63.0"
+version = "0.64.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36d860121800b2a9a94f9b5604b332d5cffb234ce17609ea479d723dbc9d3885"
+checksum = "c4243e6031260db77ede97ad86c27e501d646a27ab57b59a574f725d98ab1fb4"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -239,10 +239,6 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "stereokit",
- "stereokit-locomotion",
- "stereokit-vrm",
- "uflow",
  "uuid",
 ]
 
@@ -901,18 +897,18 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.5.9"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d829733185c1ca374f17e52b762f24f535ec625d2cc1f070e34c8a9068f341b"
+checksum = "1f646caf906c20226733ed5b1374287eb97e3c2a5c227ce668c1f2ce20ae57c9"
 dependencies = [
  "num_enum_derive",
 ]
 
 [[package]]
 name = "num_enum_derive"
-version = "0.5.9"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2be1598bf1c313dcdd12092e3f1920f463462525a21b7b4e11b4168353d0123e"
+checksum = "dcbff9bc912032c62bf65ef1d5aea88983b420f4f839db1e9b0c281a25c9c799"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1341,7 +1337,7 @@ dependencies = [
 
 [[package]]
 name = "stereokit"
-version = "0.15.0"
+version = "0.15.1"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",
@@ -1371,7 +1367,9 @@ dependencies = [
 
 [[package]]
 name = "stereokit-sys"
-version = "2.4.0"
+version = "2.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8da0cc3a02704293c5c4b6e151987d6ddc966e40312eaaf06fdf42a8d4a5d27"
 dependencies = [
  "bindgen",
  "cmake",
@@ -1596,13 +1594,6 @@ name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
-
-[[package]]
-name = "uflow"
-version = "0.7.1"
-dependencies = [
- "rand",
-]
 
 [[package]]
 name = "unicode-ident"

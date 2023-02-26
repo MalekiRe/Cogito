@@ -28,7 +28,7 @@ pub struct ConnectionHandler {
 }
 
 impl ConnectionHandler {
-    pub fn spawn_simple(callback: impl Fn(ConnectionTrigger, Option<Duration>) -> Result<()> + Send + 'static, address: SocketAddr, sleep_duration: Option<Duration>) -> Self {
+    pub fn spawn_simple(mut callback: impl FnOnce(ConnectionTrigger, Option<Duration>) -> Result<()> + Send + 'static, address: SocketAddr, sleep_duration: Option<Duration>) -> Self {
         let connection_trigger = ConnectionTrigger::new();
         let conn_trigg = connection_trigger.clone();
         Self {

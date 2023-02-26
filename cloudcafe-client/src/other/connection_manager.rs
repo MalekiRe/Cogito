@@ -1,14 +1,14 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use cloudcafe_common::laminar_helper::ConnectionHandler;
 use cloudcafe_common::packet::{Client, ClientAddresses, ClientData, ServerStatus};
 use crate::other::{audio_connection, avatar_connection, Clients, Player, Players, SinglePlayer};
 use color_eyre::Result;
-use crossbeam::channel::{Receiver, Sender};
-use laminar::Socket;
-use cloudcafe_common::ports::{AVATAR_PACKET_PORT, CLIENT_INFO_PORT, VOICE_COMM_PORT};
+use crossbeam::channel::{Receiver, Sender, TryRecvError};
+use laminar::{Packet, Socket, SocketEvent};
+use cloudcafe_common::ports::{AVATAR_PACKET_PORT, CLIENT_INFO_PORT, SEND_BACK_PORT, VOICE_COMM_PORT};
 use crate::other::info_connection::info_connection;
 use log::{warn, info};
 use stereokit::model::NodeId;
@@ -42,6 +42,7 @@ impl ActiveConnection {
         let server_info_address = SocketAddr::V4(SocketAddrV4::new(server_address, CLIENT_INFO_PORT));
         let server_avatar_address = SocketAddr::V4(SocketAddrV4::new(server_address, AVATAR_PACKET_PORT));
         let server_audio_address = SocketAddr::V4(SocketAddrV4::new(server_address, VOICE_COMM_PORT));
+        let server_callback_address = SocketAddr::V4(SocketAddrV4::new(server_address, SEND_BACK_PORT));
 
         let client_info_port = portpicker::pick_unused_port().expect("unbound port not found");
         let client_avatar_net_port = portpicker::pick_unused_port().expect("unbound port not found");
@@ -51,6 +52,8 @@ impl ActiveConnection {
         let client_info_address = SocketAddr::new(IpAddr::from_str("0.0.0.0").unwrap(), client_info_port);
         let client_avatar_networking_address = SocketAddr::new(IpAddr::from_str("0.0.0.0").unwrap(), client_avatar_net_port);
         let client_audio_address = SocketAddr::new(IpAddr::from_str("0.0.0.0").unwrap(), client_audio_port);
+
+
 
         let (server_status_tx, server_status_rx) = crossbeam::channel::unbounded();
         let (other_avatar_tx, other_avatar_rx) = crossbeam::channel::unbounded();
@@ -65,15 +68,29 @@ impl ActiveConnection {
         let (audio_this_tx, audio_this_rx) = crossbeam::channel::unbounded();
         let (audio_other_tx, audio_other_rx) = crossbeam::channel::unbounded();
 
+        let mut client_info_socket = Socket::bind(client_info_address.clone()).unwrap();
+
+
+        client_info_socket.send(Packet::reliable_unordered(server_callback_address, vec![0, 0])).unwrap();
+        client_info_socket.manual_poll(Instant::now());
+        let real_info_addr = loop {
+            client_info_socket.manual_poll(Instant::now());
+            match client_info_socket.get_event_receiver().try_recv() {
+                Ok(SocketEvent::Packet(packet)) => {
+                    break bincode::deserialize(packet.payload()).unwrap();
+                }
+                _ => {}
+            }
+        };
         let client = Client {
             data: client_data.clone(),
-            addrs: ClientAddresses { info_addr: SocketAddr::new(personal_address, client_info_port), avatar_networking_addr: SocketAddr::new(personal_address, client_avatar_net_port), audio_addr: SocketAddr::new(personal_address, client_audio_port) },
+            addrs: ClientAddresses { info_addr: real_info_addr, avatar_networking_addr: SocketAddr::new(personal_address, client_avatar_net_port), audio_addr: SocketAddr::new(personal_address, client_audio_port) },
         };
         let c = client.clone();
         info!("client initialized: {:?}", client);
         Self {
             info_connection: ConnectionHandler::spawn_simple(move |connection_trigger, sleep_duration| {
-                info_connection(connection_trigger, sleep_duration, c.clone(), Socket::bind(client_info_address).unwrap(), server_info_address.clone(), server_status_tx.clone())
+                info_connection(connection_trigger, sleep_duration, c.clone(), client_info_socket, server_info_address.clone(), server_status_tx.clone())
             }, client_info_address, Some(Duration::from_millis(10))),
             avatar_connection: ConnectionHandler::spawn(avatar_connection::avatar_connection, client_avatar_networking_address, None,
                                                         (avatar_networking_socket, other_avatar_tx.clone(), avatar_net_rx, avatar_net_tx, this_avatar_rx.clone(), server_avatar_address.clone())

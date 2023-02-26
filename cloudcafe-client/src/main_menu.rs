@@ -38,7 +38,7 @@ impl MainMenu {
                             Quat::IDENTITY),
             model: monument_model,
 
-            possible_server_ips: vec![Ipv4Addr::new(127, 0, 0, 1)],
+            possible_server_ips: vec![Ipv4Addr::new(127, 0, 0, 1), Ipv4Addr::new(74,207,246,102)],
             server_infos: Arc::new(Mutex::new(vec![])),
             server_infos_thread: None,
             connected_server_info,

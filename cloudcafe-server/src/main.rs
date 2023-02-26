@@ -11,12 +11,14 @@ use cloudcafe_common::ports::{Map, ServerInfo};
 use crate::audio_networking::setup_audio_networking;
 use crate::avatar_networking::setup_avatar_networking;
 use crate::info::setup_info_connection;
+use crate::send_back_address::setup_send_back_address;
 use crate::status::setup_run_status;
 
 mod status;
 mod info;
 mod avatar_networking;
 mod audio_networking;
+mod send_back_address;
 
 const SERVER_IP: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
 fn main() {
@@ -33,12 +35,14 @@ fn main() {
     let info_connection = setup_info_connection(&clients, &shared_info, SERVER_IP);
     let avatar_networking = setup_avatar_networking(&clients, SERVER_IP);
     let audio_networking = setup_audio_networking(&clients, SERVER_IP);
+    let send_back = setup_send_back_address(SERVER_IP);
 
     let stdin = stdin();
     stdin.read_line(&mut String::new()).unwrap();
     info_connection.disconnect().unwrap();
     avatar_networking.disconnect().unwrap();
     audio_networking.disconnect().unwrap();
+    send_back.disconnect().unwrap();
 }
 //
 // pub type PlayerList = Arc<Mutex<PlayerListInner>>;

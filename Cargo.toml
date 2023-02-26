@@ -14,12 +14,9 @@ members = [
 
 [dependencies]
 glam = {version = "0.22.0", features = ["mint", "serde", "bytemuck"]}
-stereokit = { path = "../stereokit-rs", features = ["physics"]}
-stereokit-vrm = { path = "./subcrates/stereokit-vrm"}
 serde = "1.0.152"
 color-eyre = "0.6.2"
 mint = {version = "0.5.9", features = ["serde"]}
-uflow = { path = "../uflow"}
 #nix = "0.26.2"
 serde_json = "1.0.93"
 crossbeam = "0.8.2"
@@ -36,4 +33,3 @@ uuid = { version = "1.3.0", features = ["serde"]}
 #mugltf = "0.1.2"
 #gltf-json = "1.1.0"
 #goth-gltf = { path = "../goth-gltf"}
-stereokit-locomotion = { path = "./subcrates/stereokit-locomotion"}
