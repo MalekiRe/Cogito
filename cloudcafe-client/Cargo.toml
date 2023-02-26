@@ -17,3 +17,8 @@ bincode = "1.3.3"
 laminar = "0.5.0"
 portpicker = "0.1.1"
 stereokit-vrm = { path = "../subcrates/stereokit-vrm"}
+crossbeam = "0.8.2"
+dashmap = "5.4.0"
+uuid = { version = "1.3.0", features = ["v4", "fast-rng"]}
+log = "0.4.17"
+simple_logger = "4.0.0"

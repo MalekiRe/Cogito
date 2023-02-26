@@ -1,12 +1,14 @@
 use std::net::SocketAddr;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use crate::ports::ServerInfo;
+
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum ClientStatus {
-    Connect(ClientInfo),
-    ClientInfo(ClientInfo),
-    Disconnect,
+    Connect(Client),
+    ClientInfo(Client),
+    Disconnect(Uuid),
     Heartbeat,
 }
 
@@ -14,12 +16,24 @@ pub enum ClientStatus {
 pub enum ServerStatus {
     ServerInfo(ServerInfo),
     Kick,
-    ClientDisconnected(SocketAddr),
-    ClientConnected((SocketAddr, ClientInfo)),
+    ClientDisconnected(Uuid),
+    ClientConnected(Client),
     Heartbeat,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct ClientInfo {
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Client {
+    pub data: ClientData,
+    pub addrs: ClientAddresses,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ClientData {
     pub name: String,
+    pub uuid: Uuid,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ClientAddresses {
+    pub info_addr: SocketAddr,
+    pub avatar_networking_addr: SocketAddr,
 }

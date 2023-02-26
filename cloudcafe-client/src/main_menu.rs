@@ -12,13 +12,14 @@ use stereokit::lifecycle::{StereoKitContext, StereoKitDraw};
 use stereokit::model::Model;
 use stereokit::pose::Pose;
 use stereokit::render::RenderLayer;
-use stereokit::text::TextStyle;
+use stereokit::text::{TextAlign, TextStyle};
 use stereokit::ui::{MoveType, window, WindowContext, WindowType};
 use stereokit::ui::layout::{layout_cut, Side};
 use cloudcafe_common::ports::{SERVER_STATUS_PORT, ServerInfo};
 
 pub enum MainMenuMsg {
     ConnectToServer(ServerInfo),
+    Disconnect,
 }
 
 pub struct MainMenu {
@@ -27,10 +28,10 @@ pub struct MainMenu {
     possible_server_ips: Vec<Ipv4Addr>,
     server_infos: Arc<Mutex<Vec<ServerInfo>>>,
     server_infos_thread: Option<JoinHandle<()>>,
-    connected_server: Option<ServerInfo>,
+    connected_server_info: Arc<Mutex<Option<ServerInfo>>>,
 }
 impl MainMenu {
-    pub fn new(sk: &impl StereoKitContext) -> Self {
+    pub fn new(sk: &impl StereoKitContext, connected_server_info: Arc<Mutex<Option<ServerInfo>>>) -> Self {
         let monument_model = Model::from_file(sk, "statue.glb", None).unwrap();
         Self {
             pose: Pose::new([0.0, 1.8, -0.50],
@@ -40,16 +41,17 @@ impl MainMenu {
             possible_server_ips: vec![Ipv4Addr::new(127, 0, 0, 1)],
             server_infos: Arc::new(Mutex::new(vec![])),
             server_infos_thread: None,
-            connected_server: None,
+            connected_server_info,
         }
     }
     pub fn exist(&mut self, sk: &StereoKitDraw) -> Option<MainMenuMsg> {
         self.update_server_infos_thread();
         self.model.draw(sk, Mat4::from_scale_rotation_translation(Vec3::new(12.0, 16.0, 12.0), Quat::IDENTITY, Vec3::new(0.0, 2.0, 0.0)).into(), WHITE, RenderLayer::Layer1);
-        if let Some(server_info) =  self.draw(sk) {
-            return Some(MainMenuMsg::ConnectToServer(server_info));
+        let mut ret_val = None;
+        if let Some(msg) = self.draw(sk) {
+            ret_val = Some(msg);
         }
-        None
+        ret_val
     }
     fn refresh_server_infos(&mut self) {
         if self.server_infos_thread.is_none() {
@@ -96,18 +98,51 @@ impl MainMenu {
             }
         }
     }
-    fn draw(&mut self, sk: &StereoKitDraw) -> Option<ServerInfo> {
+    fn draw(&mut self, sk: &StereoKitDraw) -> Option<MainMenuMsg> {
         let mut window_pose = self.pose;
         let mut ret_val = None;
         window(&sk, "", &mut window_pose, [0.7, 1.1].into(), WindowType::WindowBody, MoveType::MoveNone, |ui| {
-            ret_val = self.draw_server_info(sk, ui);
-            layout_cut(ui, Side::Right, 0.08, |layout| {
-                layout.ui(|ui| {
-                    if ui.button("refresh") {
-                        self.refresh_server_infos();
+            let optional_server_info = self.connected_server_info.lock().unwrap().clone();
+            match optional_server_info {
+                None => {
+                    ui.text_style(TextStyle::new(sk, Font::default(sk), 0.04, stereokit::color_named::BURLY_WOOD), |ui| {
+                        ui.text("Available Servers", TextAlign::Center);
+                    });
+                    if let Some(server_info) = self.draw_server_info(sk, ui) {
+                        ret_val = Some(MainMenuMsg::ConnectToServer(server_info));
                     }
-                });
-            });
+                    layout_cut(ui, Side::Right, 0.08, |layout| {
+                        layout.ui(|ui| {
+                            if ui.button("refresh") {
+                                self.refresh_server_infos();
+                            }
+                        });
+                    });
+                }
+                Some(server_info) => {
+                    let title = TextStyle::new(sk, Font::default(sk), 0.02, stereokit::color_named::MOCCASIN);
+                    let ip_style = TextStyle::new(sk, Font::default(sk), 0.01, stereokit::color_named::AQUAMARINE);
+                    let spacing = 0.02;
+                    ui.text_style(title, |ui| {
+                        ui.label(server_info.name.as_str(), false);
+                    });
+                    ui.label(" ", false); ui.sameline(); ui.space(spacing);
+                    ui.label("IP Address:", false); ui.sameline();
+                    ui.text_style(ip_style.clone(), |ui| {
+                        ui.label(server_info.ip.to_string().as_str(), false);
+                    });
+                    ui.label(" ", false); ui.sameline(); ui.space(spacing);
+                    ui.label("Users:          ", false); ui.sameline();
+                    ui.text_style(ip_style.clone(), |ui|  ui.label(server_info.players.len().to_string().as_str(), false));
+                    ui.label(" ", false); ui.sameline(); ui.space(spacing);
+                    ui.label("Map:            ", false); ui.sameline();
+                    ui.text_style(ip_style.clone(), |ui|  ui.label(format!("{:?}", server_info.map).as_str(), false));
+                    ui.space(0.1);
+                    if ui.button("disconnect") {
+                        ret_val = Some(MainMenuMsg::Disconnect)
+                    }
+                }
+            }
         });
         self.pose = window_pose;
         ret_val
@@ -136,7 +171,7 @@ impl MainMenu {
                         });
                         ui.label(" ", false); ui.sameline(); ui.space(spacing);
                         ui.label("Users:          ", false); ui.sameline();
-                        ui.text_style(ip_style.clone(), |ui|  ui.label(server_info.player_count.to_string().as_str(), false));
+                        ui.text_style(ip_style.clone(), |ui|  ui.label(server_info.players.len().to_string().as_str(), false));
                         ui.label(" ", false); ui.sameline(); ui.space(spacing);
                         ui.label("Map:            ", false); ui.sameline();
                         ui.text_style(ip_style.clone(), |ui|  ui.label(format!("{:?}", server_info.map).as_str(), false));
