@@ -20,6 +20,10 @@ fn avatar_networking((socket, clients, rx, tx): &mut (Socket, Clients, Receiver<
     for msg in rx.try_iter() {
         match msg {
             SocketEvent::Packet(packet) => {
+                if packet.payload().len() == 0 {
+                    tx.send(Packet::reliable_unordered(packet.addr(), bincode::serialize(&packet.addr()).unwrap())).unwrap();
+                    continue;
+                }
                 for addr in clients.iter() {
                     if packet.addr() == addr.addrs.audio_addr {
                         continue;

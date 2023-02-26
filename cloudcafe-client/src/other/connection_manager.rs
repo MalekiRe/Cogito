@@ -59,11 +59,11 @@ impl ActiveConnection {
         let (other_avatar_tx, other_avatar_rx) = crossbeam::channel::unbounded();
         let (this_avatar_tx, this_avatar_rx) = crossbeam::channel::unbounded();
 
-        let avatar_networking_socket = Socket::bind(client_avatar_networking_address.clone()).unwrap();
+        let mut avatar_networking_socket = Socket::bind(client_avatar_networking_address.clone()).unwrap();
         let (avatar_net_tx, avatar_net_rx) = (avatar_networking_socket.get_packet_sender(), avatar_networking_socket.get_event_receiver());
 
 
-        let audio_socket = Socket::bind(client_audio_address).unwrap();
+        let mut audio_socket = Socket::bind(client_audio_address).unwrap();
         let (audio_net_tx, audio_net_rx) = (audio_socket.get_packet_sender(), audio_socket.get_event_receiver());
         let (audio_this_tx, audio_this_rx) = crossbeam::channel::unbounded();
         let (audio_other_tx, audio_other_rx) = crossbeam::channel::unbounded();
@@ -82,9 +82,29 @@ impl ActiveConnection {
                 _ => {}
             }
         };
+        audio_socket.send(Packet::reliable_unordered(server_audio_address, vec![])).unwrap();
+        let real_audio_addr = loop {
+            audio_socket.manual_poll(Instant::now());
+            match audio_socket.get_event_receiver().try_recv() {
+                Ok(SocketEvent::Packet(packet)) => {
+                    break bincode::deserialize(packet.payload()).unwrap();
+                }
+                _ => {}
+            }
+        };
+        avatar_networking_socket.send(Packet::reliable_unordered(server_avatar_address, vec![])).unwrap();
+        let real_avatar_addr = loop {
+            avatar_networking_socket.manual_poll(Instant::now());
+            match avatar_networking_socket.get_event_receiver().try_recv() {
+                Ok(SocketEvent::Packet(packet)) => {
+                    break bincode::deserialize(packet.payload()).unwrap();
+                }
+                _ => {}
+            }
+        };
         let client = Client {
             data: client_data.clone(),
-            addrs: ClientAddresses { info_addr: real_info_addr, avatar_networking_addr: SocketAddr::new(personal_address, client_avatar_net_port), audio_addr: SocketAddr::new(personal_address, client_audio_port) },
+            addrs: ClientAddresses { info_addr: real_info_addr, avatar_networking_addr: real_avatar_addr, audio_addr: real_audio_addr },
         };
         let c = client.clone();
         info!("client initialized: {:?}", client);
