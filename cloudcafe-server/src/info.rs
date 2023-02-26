@@ -29,6 +29,10 @@ fn run_info_connection((clients, shared_info, rx, tx, socket): &mut (Clients, Sh
     for msg in rx.try_iter() {
         match msg {
             SocketEvent::Packet(packet) => {
+                if packet.payload().len() == 0 {
+                    tx.send(Packet::reliable_unordered(packet.addr(), bincode::serialize(&packet.addr()).unwrap())).unwrap();
+                    continue;
+                }
                 let client_info: ClientStatus = bincode::deserialize(packet.payload()).expect("couldn't deserialize client info packet");
                 match client_info {
                     ClientStatus::Connect(client) => {

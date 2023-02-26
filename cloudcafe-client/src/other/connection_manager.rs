@@ -71,7 +71,7 @@ impl ActiveConnection {
         let mut client_info_socket = Socket::bind(client_info_address.clone()).unwrap();
 
 
-        client_info_socket.send(Packet::reliable_unordered(server_callback_address, vec![0, 0])).unwrap();
+        client_info_socket.send(Packet::reliable_unordered(server_info_address, vec![])).unwrap();
         client_info_socket.manual_poll(Instant::now());
         let real_info_addr = loop {
             client_info_socket.manual_poll(Instant::now());
