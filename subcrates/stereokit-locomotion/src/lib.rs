@@ -147,12 +147,12 @@ impl LocomotionTracker {
     }
     pub fn sync_camera_stage_pose(&mut self, sk: &impl StereoKitContext) {
         let mut pose = self.get_pose(sk);
-        if pose.position.y > 0.8 {
-            pose.position.y -= 0.05;
-        }
-        if pose.position.y < 0.5 {
-            pose.position.y += 0.05;
-        }
+        // if pose.position.y > 0.8 {
+        //     pose.position.y -= 0.05;
+        // }
+        // if pose.position.y < 0.5 {
+        //     pose.position.y += 0.05;
+        // }
         self.set_pose(sk, Pose::new(Vec3::new(pose.position.x, pose.position.y, pose.position.z), pose.orientation));
         Camera::set_root(sk, pose.as_matrix());
     }

@@ -203,7 +203,8 @@ impl VrmAvatar {
         let mut vector = vec![
             (self.skeleton.torso.hips, self.node_get_pose_model(self.skeleton.torso.hips)),
                 (self.skeleton.head.head, sk.input_head())];
-        vector.append(&mut self.recursive_get_nodes_and_poses(self.skeleton.right_arm.hand));
+        vector.append(&mut self.recursive_get_nodes_and_poses(self.skeleton.right_arm.lower_arm));
+        vector.append(&mut self.recursive_get_nodes_and_poses(self.skeleton.left_arm.lower_arm));
         vector
     }
     pub fn hide_nodes(&self, mut node: NodeId) {

@@ -40,8 +40,11 @@ pub type Players = HashMap<Uuid, Player>;
 pub type SinglePlayer = Rc<RefCell<Player>>;
 
 pub fn main() -> Result<()> {
-    simple_logger::init().unwrap();
-    let sk = stereokit::Settings::default().display_preference(DisplayMode::Flatscreen).disable_unfocused_sleep(true).init()?;
+    //simple_logger::init().unwrap();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::TRACE)
+        .init();
+    let sk = stereokit::Settings::default().disable_unfocused_sleep(true).init()?;
     let connected_server_info = Arc::new(Mutex::new(None));
     let mut main_menu = MainMenu::new(&sk, connected_server_info.clone());
     let client_data = ClientData {
@@ -77,7 +80,7 @@ pub fn main() -> Result<()> {
     let mut samples = [0.0; 2880];
 
     let mut locomotion = LocomotionTracker::new(0.1, 1.0, 1.0);
-    locomotion.stage_pose = Pose::new([-1.0, 5.5, -1.0], Quat::IDENTITY);
+    locomotion.stage_pose = Pose::new([-1.0, 1.0, -1.0], Quat::IDENTITY);
 
     let mut floor_material = Material::create(&sk, &Shader::default(&sk)).unwrap();
     let floor_texture = Texture::from_file(&sk, "grass.jpg", false, 0).unwrap();
@@ -132,6 +135,7 @@ pub fn main() -> Result<()> {
             }
             for other_audio in connection.audio_other_rx.try_iter() {
                 if let Some(p) = players.get_mut(&other_audio.uuid) {
+                    println!("got audio");
                     for audio in other_audio.frames {
                         decoder.decode_float(&audio, &mut samples, false).unwrap();
                         p.sound_stream.write_samples(&samples);
@@ -198,7 +202,7 @@ pub fn add_user(sk: &impl StereoKitContext, client: Client, clients: &Clients, p
     players.insert(client.data.uuid, Player {
         uuid: client.data.uuid,
         avatar: VrmAvatar::load_from_file(sk, "Malek.vrm", &Shader::default(sk)).unwrap(),
-        sound: stream.play_sound([0.0, 0.0, 0.0], 1.0),
+        sound: stream.play_sound([0.0, 0.0, 0.0], 3.0),
         sound_stream: stream,
     });
     clients.insert(client.data.uuid, client);

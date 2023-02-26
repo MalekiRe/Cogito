@@ -63,6 +63,7 @@ fn run_info_connection((clients, shared_info, rx, tx, socket): &mut (Clients, Sh
                 if let Some(address) = possible_addr {
                     let client = clients.remove(&address).expect("address was previously found and shouldn't have been removed before this one");
                     warn!("client timed out {{ or rejoined and left rapidly }}: {:?}", client.1);
+                    send_disconnect_message(&clients, client.0, tx);
                 }
             }
         }
