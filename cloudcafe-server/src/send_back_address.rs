@@ -1,5 +1,5 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use laminar::{Packet, Socket, SocketEvent};
 use cloudcafe_common::laminar_helper::ConnectionHandler;
 use cloudcafe_common::ports::SEND_BACK_PORT;
@@ -14,6 +14,7 @@ pub fn setup_send_back_address(server_address: Ipv4Addr) -> ConnectionHandler {
 
 pub fn send_back_address((socket): &mut (Socket)) -> Result<()> {
     let socket: &mut Socket = socket;
+    socket.manual_poll(Instant::now());
     for msg in socket.get_event_receiver().try_iter() {
         match msg {
             SocketEvent::Packet(packet) => {
