@@ -36,4 +36,5 @@ pub struct ClientData {
 pub struct ClientAddresses {
     pub info_addr: SocketAddr,
     pub avatar_networking_addr: SocketAddr,
+    pub audio_addr: SocketAddr,
 }

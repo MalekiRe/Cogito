@@ -22,3 +22,5 @@ dashmap = "5.4.0"
 uuid = { version = "1.3.0", features = ["v4", "fast-rng"]}
 log = "0.4.17"
 simple_logger = "4.0.0"
+opus = "0.3.0"
+my_internet_ip = "0.1.1"

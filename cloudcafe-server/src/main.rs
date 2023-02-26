@@ -2,11 +2,13 @@ use std::collections::HashMap;
 use std::io::stdin;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::{Arc, Mutex};
+use color_eyre::owo_colors::OwoColorize;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use cloudcafe_common::packet::Client;
 use cloudcafe_common::ports::{Map, ServerInfo};
+use crate::audio_networking::setup_audio_networking;
 use crate::avatar_networking::setup_avatar_networking;
 use crate::info::setup_info_connection;
 use crate::status::setup_run_status;
@@ -14,6 +16,7 @@ use crate::status::setup_run_status;
 mod status;
 mod info;
 mod avatar_networking;
+mod audio_networking;
 
 const SERVER_IP: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
 fn main() {
@@ -29,11 +32,13 @@ fn main() {
     let status_thread = setup_run_status(&clients, &shared_info, SERVER_IP);
     let info_connection = setup_info_connection(&clients, &shared_info, SERVER_IP);
     let avatar_networking = setup_avatar_networking(&clients, SERVER_IP);
+    let audio_networking = setup_audio_networking(&clients, SERVER_IP);
 
     let stdin = stdin();
     stdin.read_line(&mut String::new()).unwrap();
     info_connection.disconnect().unwrap();
     avatar_networking.disconnect().unwrap();
+    audio_networking.disconnect().unwrap();
 }
 //
 // pub type PlayerList = Arc<Mutex<PlayerListInner>>;
